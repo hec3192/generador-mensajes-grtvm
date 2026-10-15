@@ -18,3 +18,6 @@ Importante: valida los mensajes con datos de prueba antes de distribuirlos.
 Versión 9: los botones de WhatsApp usan whatsapp://send?text= para intentar abrir directamente la app instalada. El texto se copia antes como alternativa si iOS bloquea el enlace.
 
 Version 10: los campos de hora aceptan y muestran HH:mm:ss. Puedes escribir 14:05:09 o 14:05; la aplicación completa segundos como :00.
+
+
+VERSION 11: fuerza una nueva caché y usa campos de texto para las horas (HH:mm:ss). Si el iPhone sigue mostrando el selector de rueda, está abriendo una copia antigua instalada. Elimina el acceso directo antiguo y los datos del sitio en Ajustes > Safari > Avanzado > Datos de sitios web, elimina el dominio github.io y vuelve a abrir la página en Safari antes de añadirla a inicio.
