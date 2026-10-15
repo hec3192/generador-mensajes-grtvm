@@ -8,7 +8,7 @@ const defaultCatalogs={
 };
 // Al usar claves nuevas, la app inicia vacía aunque el navegador conserve datos de versiones anteriores.
 let catalogs=load("catalogs_v19",defaultCatalogs);
-let selected={evento:[],equipo:[],proteccion:[],causa:[]};
+let selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};
 const configs=[
  {key:"evento",input:"searchEvento",results:"resultsEvento",tags:"tagsEvento",catalog:"Eventos / disparos",multi:false},
  {key:"equipo",input:"searchEquipo",results:"resultsEquipo",tags:"tagsEquipo",catalog:"Equipos",multi:true},
@@ -177,7 +177,7 @@ $("excelFile").onchange=async e=>{
  e.target.value="";
 };
 $("templateBtn").onclick=()=>alert("El Excel debe tener hojas llamadas: Equipos, Protecciones, Eventos o Eventos / disparos, Causas y Subestaciones. Usa una fila de encabezados. En Subestaciones usa columnas Acrónimo y Descripción. Ejemplo: AAN | ACTOPAN.");
-$("clearData").onclick=()=>{if(confirm("¿Borrar todos los datos locales de los catálogos?")){catalogs=structuredClone(defaultCatalogs);selected={evento:[],equipo:[],proteccion:[],causa:[]};save();renderAll();renderCatalogList();$("catalogStatus").textContent="Catálogos locales borrados."}};
+$("clearData").onclick=()=>{if(confirm("¿Borrar todos los datos locales de los catálogos?")){catalogs=structuredClone(defaultCatalogs);selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};save();renderAll();renderCatalogList();$("catalogStatus").textContent="Catálogos locales borrados."}};
 $("fechaEvento").value=new Date().toISOString().slice(0,10);
 renderAll();
 renderCatalogList();
