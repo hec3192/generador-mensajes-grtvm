@@ -57,26 +57,34 @@ function acronyms(){
  });
  return found.map(x=>`*${x.code}* ${x.name}`).join("\n");
 }
+function equipmentDisplay(raw){
+ const sub=(catalogs["Subestaciones"]||[]).map(x=>{const parts=x.split(/\s*[|–-]\s*/);return {code:(parts[0]||"").trim(),name:parts.slice(1).join(" - ").trim()}}).filter(x=>x.code&&x.name);
+ let out=raw;
+ sub.sort((a,b)=>b.code.length-a.code.length).forEach(x=>{
+   const re=new RegExp(`\\b${x.code.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\$&')}\\b(?!\\s*\\()`,"g");
+   out=out.replace(re,`${x.code} (${x.name})`);
+ });
+ return out;
+}
 function generate(){
- const equipo=selected.equipo.join(", "), evento=selected.evento[0]||"evento", causa=selected.causa[0]||"Se investiga", prot=selected.proteccion.join(", ");
+ const equipoRaw=selected.equipo.join(", "), equipo=equipmentDisplay(equipoRaw), evento=selected.evento[0]||"evento", causa=selected.causa[0]||"Desconocida", prot=selected.proteccion.join(", ");
  const he=get("horaEvento")||"00:00:00", fe=fmtDate(get("fechaEvento")), fn=fmtDate(get("fechaNorm")), hn=get("horaNorm");
  const affected=get("afectacion")==="Con afectación", mw=get("mw"), condicion=get("condicion")||"normales de operación";
- if(!equipo){$("status").textContent="Selecciona al menos un equipo antes de generar los mensajes.";return}
- const cargaZotp=affected?`El evento provocó afectación de carga${mw?` por ${mw} MW`:" (MW por especificar)"}.`:"El evento no provocó afectación de carga.";
- const protecZotp=prot?`\nProtecciones operadas: ${prot}.`:"";
- const eventLine=`${he} hrs. ${evento} en ${equipo}.${protecZotp}`;
- const normLine=(fn&&hn)?`\nNormalizado el ${fn} a las ${hn} hrs.`:`\nPendiente de normalizar: ${equipo}.`;
+ if(!equipoRaw){$("status").textContent="Selecciona al menos un equipo antes de generar los mensajes.";return}
+ const estado=affected?"CON AFECTACIÓN":"SIN AFECTACIÓN";
+ const objetivo=`Objetivo: Informar sobre el evento ${affected?"con":"sin"} afectación por ${evento.toLowerCase()} en ${equipo}.`;
  const antecedente=`Las Gerencia Regional de Transmisión Valle de México se encontraba en condiciones ${condicion}.`;
- const causaTexto=causa?` Causa del evento: ${causa}.`:"";
+ const hora24=he.length===5?`${he}:00`:he;
+ const protectionLine=prot?` opera ${prot}.`:".";
+ const sequence=`${hora24} hrs. ${evento} en ${equipoRaw}${protectionLine}`;
+ const normLine=(fn&&hn)?`Normalizado el ${fn} a las ${hn.length===5?hn+":00":hn} hrs.`:`Pendiente de normalizar: ${equipoRaw}.`;
  const cargaGRTVM=affected?(mw?`El evento provocó afectación de carga por ${mw} MW.`:"El evento provocó afectación de carga (MW por especificar).") : "El evento no provocó afectación de carga.";
- const proteccionesGRTVM=prot?`\nProtecciones operadas: ${prot}.`:"";
- const encabezadoAfectacion=affected?"CON AFECTACIÓN":"SIN AFECTACIÓN";
- const causaGRTVM=`Causa del evento: ${causa}.`;
- const eventoGRTVM=`El ${fe||"[fecha pendiente]"} a las ${he} se presentó ${evento.toLowerCase()} en ${equipo}.`;
- const grtvm=`NOTA INFORMATIVA DEL EVENTO ${encabezadoAfectacion} EN EL ${equipo}\n\n${antecedente}\n\n${eventoGRTVM}\n${causaGRTVM}\n${cargaGRTVM}${proteccionesGRTVM}`;
+ const causaTexto=causa||"Desconocida";
+ const grtvm=`*NOTA INFORMATIVA DEL EVENTO ${estado} EN EL ${equipo}*\n\n${objetivo}\n\n*Antecedentes*\n\n${antecedente}\n\n*Secuencia de Evento:*\n\n${sequence}\n${normLine}\n\n${cargaGRTVM}\n\n*Causa de Evento:*\n\n${causaTexto}.`;
+ const cargaZotp=affected?`El evento provocó afectación de carga${mw?` por ${mw} MW`:" (MW por especificar)"}.` : "El evento no provocó afectación de carga.";
  const acr=acronyms();
- const zotp=`*${get("zona")||"ZOT PACHUCA"}*\n\n*Secuencia de Evento:*\n\n${eventLine}${normLine}\n\n${cargaZotp}${ac?"\n\n"+ac:""}`;
- $("msgGrtvm").value=grtvm;$("msgZotp").value=zotp;$("status").textContent="Mensajes generados. Verifica fecha, hora, equipo, causa y afectación antes de distribuirlos.";
+ const zotp=`*${get("zona")||"ZOT PACHUCA"}*\n\n*Secuencia de Evento:*\n\n${sequence}\n${normLine}\n\n${cargaZotp}${acr?"\n\n"+acr:""}`;
+ $("msgGrtvm").value=grtvm;$("msgZotp").value=zotp;$("status").textContent="Mensajes generados con la estructura institucional. Verifica equipo, hora, protecciones, causa y afectación antes de distribuirlos.";
 }
 $("generate").onclick=generate;
 $("newEvent").onclick=()=>{["fechaNorm","horaNorm","mw"].forEach(id=>$(id).value="");$("horaEvento").value="00:00:00";$("fechaEvento").value=new Date().toISOString().slice(0,10);$("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));selected={evento:[],equipo:[],proteccion:[],causa:["Se investiga"]};configs.forEach(c=>$(c.input).value="");$("msgGrtvm").value="";$("msgZotp").value="";renderAll();save();$("status").textContent="Formulario limpio."};

@@ -1,26 +1,18 @@
-GENERADOR DE MENSAJES OPERATIVOS — iPhone
+GENERADOR GRTVM-ZOTP - VERSION 7
 
-Esta es una versión web progresiva (PWA) independiente de Windows, diseñada para iPhone.
-Los catálogos y selecciones se guardan en el almacenamiento local del navegador del iPhone.
-Permite importar libros Excel (.xlsx/.xls) con hojas:
-- Equipos
-- Protecciones
-- Eventos o Eventos / disparos
-- Causas
-- Subestaciones
+Cambios principales:
+- Mensaje GRTVM con formato institucional por secciones: título, objetivo, antecedentes, secuencia de evento, afectación y causa.
+- El título incorpora CON AFECTACIÓN o SIN AFECTACIÓN y agrega la descripción de subestación si el catálogo usa el formato AAN | ACTOPAN.
+- La secuencia incluye hora, evento, equipo y protecciones operadas.
+- Incluye estado de normalización: pendiente o normalizado si se capturan fecha y hora.
+- Eliminados campos editables de antecedentes y observaciones.
+- Actualización de caché a v7.
 
-Para Subestaciones se recomienda dos columnas: Acrónimo y Descripción.
-Los otros catálogos pueden tener una columna de valores debajo del encabezado.
-Si un libro tiene una hoja que no coincide con las categorías, la primera hoja se usa como Equipos.
+PUBLICACIÓN EN GITHUB PAGES:
+1. Descomprime este ZIP.
+2. Sube los archivos index.html, app.js y sw.js a la raíz del repositorio, reemplazando los existentes.
+3. Si se solicita, confirma Replace/Commit changes.
+4. Espera a que Pages publique los cambios.
+5. Cierra la aplicación instalada y vuelve a abrirla. Si sigue la versión anterior, abre la URL en Safari/Chrome y recarga.
 
-IMPORTANTE PARA INSTALAR EN IPHONE:
-iOS requiere servir la PWA desde una dirección HTTPS. No basta con abrir index.html desde Archivos.
-1. Publica estos archivos en un hosting estático HTTPS (por ejemplo GitHub Pages).
-2. Abre la dirección en Safari en el iPhone.
-3. Pulsa Compartir > Añadir a pantalla de inicio.
-4. Abre la app desde el nuevo icono.
-5. Importa tu Excel desde el selector de archivos de iOS.
-
-La importación XLSX usa la biblioteca SheetJS desde un CDN, por lo que la primera carga del lector Excel requiere internet. La interfaz instalada puede abrirse sin conexión después de cargarse; la importación de Excel requiere conexión para cargar esa biblioteca si aún no está en caché.
-Los datos se guardan en el almacenamiento del navegador de este iPhone, no se sincronizan con Windows ni con otros dispositivos. No borres los datos del sitio ni desinstales la app si necesitas conservarlos.
-Este proyecto es una base funcional inicial: revisa los mensajes generados con tus formatos operativos reales antes de distribuirlos.
+Importante: los catálogos se guardan localmente en el navegador/dispositivo. Valida el formato y los datos con un evento de prueba antes de distribuir mensajes operativos.
