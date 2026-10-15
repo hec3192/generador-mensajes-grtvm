@@ -180,4 +180,16 @@ $("clearData").onclick=()=>{if(confirm("¿Borrar catálogos importados y restaur
 $("fechaEvento").value=new Date().toISOString().slice(0,10);
 renderAll();
 renderCatalogList();
+
+// Mostrar u ocultar la sección de catálogos sin borrar la información guardada.
+(()=>{
+ const btn=$("toggleCatalogs"), content=$("catalogContent");
+ if(!btn||!content)return;
+ const key="grtvm_catalogos_ocultos_v1";
+ const apply=hidden=>{content.hidden=hidden;btn.textContent=hidden?"Mostrar catálogos ▼":"Ocultar catálogos ▲";btn.setAttribute("aria-expanded",String(!hidden));};
+ let hidden=false;try{hidden=localStorage.getItem(key)==="1"}catch(e){}
+ apply(hidden);
+ btn.addEventListener("click",()=>{hidden=!hidden;apply(hidden);try{localStorage.setItem(key,hidden?"1":"0")}catch(e){}});
+})();
+
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
