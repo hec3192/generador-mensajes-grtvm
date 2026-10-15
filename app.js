@@ -70,12 +70,12 @@ function normalizeTimeValue(id, required=false){
  const el=$(id); let v=(el.value||"").trim();
  if(!v){if(required){el.value="00:00:00";return "00:00:00"}return ""}
  // Accept HH:mm, HH:mm:ss, and digits such as 140000 or 1400.
- if(/^\\d{1,2}:\\d{2}$/.test(v)) v += ":00";
- else if(/^\\d{1,2}:\\d{2}:\\d{2}$/.test(v)) {}
- else if(/^\\d{4}$/.test(v)) v=v.slice(0,2)+":"+v.slice(2)+":00";
- else if(/^\\d{6}$/.test(v)) v=v.slice(0,2)+":"+v.slice(2,4)+":"+v.slice(4,6);
+ if(/^\d{1,2}:\d{2}$/.test(v)) v += ":00";
+ else if(/^\d{1,2}:\d{2}:\d{2}$/.test(v)) {}
+ else if(/^\d{4}$/.test(v)) v=v.slice(0,2)+":"+v.slice(2)+":00";
+ else if(/^\d{6}$/.test(v)) v=v.slice(0,2)+":"+v.slice(2,4)+":"+v.slice(4,6);
  else {el.setCustomValidity("Usa el formato HH:mm:ss, por ejemplo 14:05:09.");el.reportValidity();return null}
- const m=v.match(/^(\\d{2}):(\\d{2}):(\\d{2})$/);
+ const m=v.match(/^(\d{2}):(\d{2}):(\d{2})$/);
  if(!m||+m[1]>23||+m[2]>59||+m[3]>59){el.setCustomValidity("Hora no válida. Usa HH:mm:ss (00:00:00 a 23:59:59).");el.reportValidity();return null}
  el.setCustomValidity("");el.value=v;return v;
 }
