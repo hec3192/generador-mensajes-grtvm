@@ -58,25 +58,25 @@ function acronyms(){
  return found.map(x=>`*${x.code}* ${x.name}`).join("\n");
 }
 function generate(){
- const equipo=selected.equipo.join(", "), evento=selected.evento[0]||"Evento", causa=selected.causa[0]||"Se investiga", prot=selected.proteccion.join(", ");
+ const equipo=selected.equipo.join(", "), evento=selected.evento[0]||"evento", causa=selected.causa[0]||"Se investiga", prot=selected.proteccion.join(", ");
  const he=get("horaEvento")||"00:00:00", fe=fmtDate(get("fechaEvento")), fn=fmtDate(get("fechaNorm")), hn=get("horaNorm");
- const affected=get("afectacion")==="Con afectación", mw=get("mw");
- const carga=affected?`El evento provocó afectación de carga${mw?` por ${mw} MW`:" (MW por especificar)"}.`:"El evento no provocó afectación de carga.";
- const protec=prot?`\nProtecciones operadas: ${prot}.`:"";
- const eventLine=`${he} hrs. ${evento} en ${equipo||"[equipo pendiente]"}${protec}.`;
- const normLine=(fn&&hn)?`\n${fn} ${hn} hrs. Normalizado: ${equipo}.`:`\nPendiente de normalizar: ${equipo}.`;
- const tipo="";
+ const affected=get("afectacion")==="Con afectación", mw=get("mw"), condicion=get("condicion")||"normales de operación";
+ if(!equipo){$("status").textContent="Selecciona al menos un equipo antes de generar los mensajes.";return}
+ const cargaZotp=affected?`El evento provocó afectación de carga${mw?` por ${mw} MW`:" (MW por especificar)"}.`:"El evento no provocó afectación de carga.";
+ const protecZotp=prot?`\nProtecciones operadas: ${prot}.`:"";
+ const eventLine=`${he} hrs. ${evento} en ${equipo}.${protecZotp}`;
+ const normLine=(fn&&hn)?`\nNormalizado el ${fn} a las ${hn} hrs.`:`\nPendiente de normalizar: ${equipo}.`;
+ const antecedente=`Las Gerencia Regional de Transmisión Valle de México se encontraba en condiciones ${condicion}.`;
  const causaTexto=causa?` Causa del evento: ${causa}.`:"";
- const cargaTexto=affected?(mw?`, con afectación de ${mw} MW`: ", con afectación de carga (MW por especificar)"):", sin afectación de carga";
- const proteccionesTexto=prot?` Protecciones operadas: ${prot}.`:"";
- const antecedente="Las Gerencia Regional de Transmisión Valle de México se encontraba en condiciones";
- const condicion=get("condicion")||"normales de operación";
  const cargaGRTVM=affected?(mw?`El evento provocó afectación de carga por ${mw} MW.`:"El evento provocó afectación de carga (MW por especificar).") : "El evento no provocó afectación de carga.";
  const proteccionesGRTVM=prot?`\nProtecciones operadas: ${prot}.`:"";
- const grtvm=`NOTA INFORMATIVA DEL EVENTO EN EL ${equipo||"[equipo pendiente]"}${tipo}\n\n${antecedente} ${condicion}. El ${fe||"[fecha pendiente]"} a las ${he} se presentó ${evento.toLowerCase()} en ${equipo||"[equipo pendiente]"}.${causaTexto}${cargaGRTVM}${proteccionesGRTVM}`;
+ const encabezadoAfectacion=affected?"CON AFECTACIÓN":"SIN AFECTACIÓN";
+ const causaGRTVM=`Causa del evento: ${causa}.`;
+ const eventoGRTVM=`El ${fe||"[fecha pendiente]"} a las ${he} se presentó ${evento.toLowerCase()} en ${equipo}.`;
+ const grtvm=`NOTA INFORMATIVA DEL EVENTO ${encabezadoAfectacion} EN EL ${equipo}\n\n${antecedente}\n\n${eventoGRTVM}\n${causaGRTVM}\n${cargaGRTVM}${proteccionesGRTVM}`;
  const acr=acronyms();
- const zotp=`*${get("zona")||"ZOT PACHUCA"}*\n\n*Secuencia de Evento:*\n\n${eventLine}${normLine}\n\n${carga}${acronyms()?"\n\n"+acronyms():""}`;
- $("msgGrtvm").value=grtvm;$("msgZotp").value=zotp;$("status").textContent="Mensajes generados. Verifica la información antes de distribuirlos.";
+ const zotp=`*${get("zona")||"ZOT PACHUCA"}*\n\n*Secuencia de Evento:*\n\n${eventLine}${normLine}\n\n${cargaZotp}${ac?"\n\n"+ac:""}`;
+ $("msgGrtvm").value=grtvm;$("msgZotp").value=zotp;$("status").textContent="Mensajes generados. Verifica fecha, hora, equipo, causa y afectación antes de distribuirlos.";
 }
 $("generate").onclick=generate;
 $("newEvent").onclick=()=>{["fechaNorm","horaNorm","mw"].forEach(id=>$(id).value="");$("horaEvento").value="00:00:00";$("fechaEvento").value=new Date().toISOString().slice(0,10);$("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));selected={evento:[],equipo:[],proteccion:[],causa:["Se investiga"]};configs.forEach(c=>$(c.input).value="");$("msgGrtvm").value="";$("msgZotp").value="";renderAll();save();$("status").textContent="Formulario limpio."};
