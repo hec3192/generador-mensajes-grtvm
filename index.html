@@ -67,9 +67,9 @@ footer{text-align:center;color:#7b8798;font-size:12px;padding:12px}
 <h2>Datos del evento</h2>
 <div class="grid cols2">
 <div class="field"><label for="fechaEvento">Fecha del evento</label><input id="fechaEvento" type="date"></div>
-<div class="field"><label for="horaEvento">Hora del evento (24 horas)</label><input id="horaEvento" type="time" step="1" value="00:00:00"></div>
+<div class="field"><label for="horaEvento">Hora del evento (24 horas)</label><input id="horaEvento" type="text" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="HH:mm:ss" value="00:00:00" pattern="([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]"></div>
 <div class="field"><label for="fechaNorm">Fecha de normalización</label><input id="fechaNorm" type="date"></div>
-<div class="field"><label for="horaNorm">Hora de normalización (24 horas)</label><input id="horaNorm" type="time" step="1"></div>
+<div class="field"><label for="horaNorm">Hora de normalización (24 horas)</label><input id="horaNorm" type="text" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="HH:mm:ss" pattern="([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]"></div>
 </div>
 </section>
 <section class="card">

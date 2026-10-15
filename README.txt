@@ -16,3 +16,5 @@ PUBLICACIÓN EN GITHUB PAGES:
 Importante: valida los mensajes con datos de prueba antes de distribuirlos.
 
 Versión 9: los botones de WhatsApp usan whatsapp://send?text= para intentar abrir directamente la app instalada. El texto se copia antes como alternativa si iOS bloquea el enlace.
+
+Version 10: los campos de hora aceptan y muestran HH:mm:ss. Puedes escribir 14:05:09 o 14:05; la aplicación completa segundos como :00.

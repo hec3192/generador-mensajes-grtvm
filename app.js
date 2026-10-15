@@ -66,15 +66,34 @@ function equipmentDisplay(raw){
  });
  return out;
 }
+function normalizeTimeValue(id, required=false){
+ const el=$(id); let v=(el.value||"").trim();
+ if(!v){if(required){el.value="00:00:00";return "00:00:00"}return ""}
+ // Accept HH:mm, HH:mm:ss, and digits such as 140000 or 1400.
+ if(/^\\d{1,2}:\\d{2}$/.test(v)) v += ":00";
+ else if(/^\\d{1,2}:\\d{2}:\\d{2}$/.test(v)) {}
+ else if(/^\\d{4}$/.test(v)) v=v.slice(0,2)+":"+v.slice(2)+":00";
+ else if(/^\\d{6}$/.test(v)) v=v.slice(0,2)+":"+v.slice(2,4)+":"+v.slice(4,6);
+ else {el.setCustomValidity("Usa el formato HH:mm:ss, por ejemplo 14:05:09.");el.reportValidity();return null}
+ const m=v.match(/^(\\d{2}):(\\d{2}):(\\d{2})$/);
+ if(!m||+m[1]>23||+m[2]>59||+m[3]>59){el.setCustomValidity("Hora no válida. Usa HH:mm:ss (00:00:00 a 23:59:59).");el.reportValidity();return null}
+ el.setCustomValidity("");el.value=v;return v;
+}
+["horaEvento","horaNorm"].forEach(id=>{
+ const el=$(id);
+ el.addEventListener("input",()=>el.setCustomValidity(""));
+ el.addEventListener("blur",()=>{if(el.value.trim())normalizeTimeValue(id,false)});
+});
 function generate(){
  const equipoRaw=selected.equipo.join(", "), equipo=equipmentDisplay(equipoRaw), evento=selected.evento[0]||"evento", causa=selected.causa[0]||"Desconocida", prot=selected.proteccion.join(", ");
- const he=get("horaEvento")||"00:00:00", fe=fmtDate(get("fechaEvento")), fn=fmtDate(get("fechaNorm")), hn=get("horaNorm");
+ const he=normalizeTimeValue("horaEvento",true), fe=fmtDate(get("fechaEvento")), fn=fmtDate(get("fechaNorm")), hn=normalizeTimeValue("horaNorm",false);
+ if(he===null||hn===null)return;
  const affected=get("afectacion")==="Con afectación", mw=get("mw"), condicion=get("condicion")||"normales de operación";
  if(!equipoRaw){$("status").textContent="Selecciona al menos un equipo antes de generar los mensajes.";return}
  const estado=affected?"CON AFECTACIÓN":"SIN AFECTACIÓN";
  const objetivo=`Objetivo: Informar sobre el evento ${affected?"con":"sin"} afectación por ${evento.toLowerCase()} en ${equipo}.`;
  const antecedente=`Las Gerencia Regional de Transmisión Valle de México se encontraba en condiciones ${condicion}.`;
- const hora24=he.length===5?`${he}:00`:he;
+ const hora24=he;
  const protectionLine=prot?` opera ${prot}.`:".";
  const sequence=`${hora24} hrs. ${evento} en ${equipoRaw}${protectionLine}`;
  const normLine=(fn&&hn)?`Normalizado el ${fn} a las ${hn.length===5?hn+":00":hn} hrs.`:`Pendiente de normalizar: ${equipoRaw}.`;
