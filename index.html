@@ -23,7 +23,7 @@ h2{font-size:17px;margin:0 0 13px;color:var(--navy)}h3{font-size:16px;margin:0 0
 input,select,textarea{font:inherit;width:100%;border:1px solid #aab8c8;border-radius:9px;background:var(--pale);padding:12px;color:var(--text);min-height:44px}
 textarea{min-height:220px;resize:vertical;background:#fbfdff;line-height:1.5}
 input:disabled{background:var(--red);color:#7c1d2a;opacity:1}
-.hint{font-size:12px;color:#64748b;margin:5px 0 0}
+.hint{font-size:12px;color:#64748b;margin:5px 0 0}.time-picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.time-picker select{text-align:center;padding:12px 4px;font-size:17px;font-variant-numeric:tabular-nums}.time-part{min-width:0}.time-part span{display:block;text-align:center;font-size:11px;color:#64748b;margin-bottom:3px}
 .btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 button,.filelabel{border:0;border-radius:10px;padding:12px 14px;font:600 14px inherit;cursor:pointer;background:#e6edf6;color:#17365d;min-height:44px}
 .primary{background:var(--blue);color:white}.whatsapp{background:var(--green);color:white}.danger{background:#fee2e2;color:#991b1b}.outline{border:1px solid var(--line);background:white}
@@ -67,9 +67,9 @@ footer{text-align:center;color:#7b8798;font-size:12px;padding:12px}
 <h2>Datos del evento</h2>
 <div class="grid cols2">
 <div class="field"><label for="fechaEvento">Fecha del evento</label><input id="fechaEvento" type="date"></div>
-<div class="field"><label for="horaEvento">Hora del evento (24 horas)</label><input id="horaEvento" type="text" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="HH:mm:ss" value="00:00:00" pattern="([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]"></div>
+<div class="field"><label>Hora del evento (24 horas)</label><div class="time-picker" id="pickerHoraEvento" data-time-picker="horaEvento" aria-label="Selecciona hora, minutos y segundos"></div><input id="horaEvento" type="hidden" value="00:00:00"><p class="hint">Selecciona la hora, los minutos y los segundos en las listas.</p></div>
 <div class="field"><label for="fechaNorm">Fecha de normalización</label><input id="fechaNorm" type="date"></div>
-<div class="field"><label for="horaNorm">Hora de normalización (24 horas)</label><input id="horaNorm" type="text" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="HH:mm:ss" pattern="([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]"></div>
+<div class="field"><label>Hora de normalización (24 horas)</label><div class="time-picker" id="pickerHoraNorm" data-time-picker="horaNorm" aria-label="Selecciona hora, minutos y segundos"></div><input id="horaNorm" type="hidden"><p class="hint">Opcional si el equipo sigue pendiente de normalizar.</p></div>
 </div>
 </section>
 <section class="card">
@@ -84,7 +84,7 @@ footer{text-align:center;color:#7b8798;font-size:12px;padding:12px}
 <div class="field"><label>Condición operativa</label><select id="condicion"><option>normales de operación</option><option>condiciones anormales de operación</option></select></div>
 <div class="field"><label>Zona / encabezado ZOTP</label><input id="zona" value="ZOT PACHUCA"></div>
 </div>
-<div class="btnrow"><button class="primary" id="generate">Generar mensajes</button><button class="outline" id="newEvent">Nuevo evento / limpiar</button></div>
+<div class="btnrow"><button type="button" class="primary" id="generate">Generar mensajes</button><button type="button" class="outline" id="newEvent">Nuevo evento / limpiar</button></div>
 <div class="status" id="status"></div>
 </section>
 <section class="msggrid">
@@ -94,5 +94,5 @@ footer{text-align:center;color:#7b8798;font-size:12px;padding:12px}
 <footer>Aplicación independiente · Datos almacenados localmente en este iPhone</footer>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=14"></script>
 </body></html>

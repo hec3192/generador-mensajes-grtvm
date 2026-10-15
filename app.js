@@ -66,6 +66,38 @@ function equipmentDisplay(raw){
  });
  return out;
 }
+
+// Selectores de hora compatibles con iPhone: hora, minuto y segundo por separado.
+function setupTimePicker(hiddenId, defaultValue=""){
+ const wrap=$(hiddenId==="horaEvento"?"pickerHoraEvento":"pickerHoraNorm");
+ const parts=[{key:"hh",label:"HH",max:23},{key:"mm",label:"mm",max:59},{key:"ss",label:"ss",max:59}];
+ wrap.innerHTML="";
+ parts.forEach(part=>{
+   const box=document.createElement("div");box.className="time-part";
+   const label=document.createElement("span");label.textContent=part.label;
+   const sel=document.createElement("select");sel.setAttribute("aria-label",part.label);
+   if(hiddenId==="horaNorm") {const blank=document.createElement("option");blank.value="";blank.textContent="--";sel.append(blank)}
+   for(let i=0;i<=part.max;i++){const opt=document.createElement("option");opt.value=String(i).padStart(2,"0");opt.textContent=opt.value;sel.append(opt)}
+   sel.dataset.part=part.key;box.append(label,sel);wrap.append(box);
+   sel.addEventListener("change",()=>syncTimePicker(hiddenId));
+ });
+ if(defaultValue) setTimePickerValue(hiddenId,defaultValue); else syncTimePicker(hiddenId);
+}
+function setTimePickerValue(hiddenId,value){
+ const wrap=$(hiddenId==="horaEvento"?"pickerHoraEvento":"pickerHoraNorm");
+ const m=String(value||"").match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+ const vals=(hiddenId==="horaNorm"&&!value)?["",""," ".trim()]:m?[m[1].padStart(2,"0"),m[2],(m[3]||"00")]:["00","00","00"];
+ [...wrap.querySelectorAll("select")].forEach((sel,i)=>{sel.value=vals[i];});
+ syncTimePicker(hiddenId);
+}
+function syncTimePicker(hiddenId){
+ const wrap=$(hiddenId==="horaEvento"?"pickerHoraEvento":"pickerHoraNorm");
+ const vals=[...wrap.querySelectorAll("select")].map(s=>s.value);
+ $(hiddenId).value=(hiddenId==="horaNorm"&&vals.some(v=>v===""))?"":vals.join(":");
+}
+setupTimePicker("horaEvento","00:00:00");
+setupTimePicker("horaNorm","");
+
 function normalizeTimeValue(id, required=false){
  const el=$(id); let v=(el.value||"").trim();
  if(!v){if(required){el.value="00:00:00";return "00:00:00"}return ""}
@@ -74,15 +106,14 @@ function normalizeTimeValue(id, required=false){
  else if(/^\d{1,2}:\d{2}:\d{2}$/.test(v)) {}
  else if(/^\d{4}$/.test(v)) v=v.slice(0,2)+":"+v.slice(2)+":00";
  else if(/^\d{6}$/.test(v)) v=v.slice(0,2)+":"+v.slice(2,4)+":"+v.slice(4,6);
- else {el.setCustomValidity("Usa el formato HH:mm:ss, por ejemplo 14:05:09.");el.reportValidity();return null}
+ else {$("status").textContent="Selecciona una hora válida usando HH, mm y ss.";return null}
  const m=v.match(/^(\d{2}):(\d{2}):(\d{2})$/);
- if(!m||+m[1]>23||+m[2]>59||+m[3]>59){el.setCustomValidity("Hora no válida. Usa HH:mm:ss (00:00:00 a 23:59:59).");el.reportValidity();return null}
- el.setCustomValidity("");el.value=v;return v;
+ if(!m||+m[1]>23||+m[2]>59||+m[3]>59){$("status").textContent="Hora no válida. Selecciona valores entre 00:00:00 y 23:59:59.";return null}
+ el.value=v;return v;
 }
 ["horaEvento","horaNorm"].forEach(id=>{
  const el=$(id);
- el.addEventListener("input",()=>el.setCustomValidity(""));
- el.addEventListener("blur",()=>{if(el.value.trim())normalizeTimeValue(id,false)});
+
 });
 function generate(){
  const equipoRaw=selected.equipo.join(", "), equipo=equipmentDisplay(equipoRaw), evento=selected.evento[0]||"evento", causa=selected.causa[0]||"Desconocida", prot=selected.proteccion.join(", ");
@@ -106,7 +137,7 @@ function generate(){
  $("msgGrtvm").value=grtvm;$("msgZotp").value=zotp;$("status").textContent="Mensajes generados con la estructura institucional. Verifica equipo, hora, protecciones, causa y afectación antes de distribuirlos.";
 }
 $("generate").onclick=generate;
-$("newEvent").onclick=()=>{["fechaNorm","horaNorm","mw"].forEach(id=>$(id).value="");$("horaEvento").value="00:00:00";$("fechaEvento").value=new Date().toISOString().slice(0,10);$("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));selected={evento:[],equipo:[],proteccion:[],causa:["Se investiga"]};configs.forEach(c=>$(c.input).value="");$("msgGrtvm").value="";$("msgZotp").value="";renderAll();save();$("status").textContent="Formulario limpio."};
+$("newEvent").onclick=()=>{["fechaNorm","horaNorm","mw"].forEach(id=>$(id).value="");setTimePickerValue("horaEvento","00:00:00");setTimePickerValue("horaNorm","");$("fechaEvento").value=new Date().toISOString().slice(0,10);$("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));selected={evento:[],equipo:[],proteccion:[],causa:["Se investiga"]};configs.forEach(c=>$(c.input).value="");$("msgGrtvm").value="";$("msgZotp").value="";renderAll();save();$("status").textContent="Formulario limpio."};
 document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{const value=$(b.dataset.copy).value;if(!value)return;try{await navigator.clipboard.writeText(value);$("status").textContent="Mensaje copiado."}catch{$(b.dataset.copy).select();document.execCommand("copy");$("status").textContent="Mensaje copiado."}});
 document.querySelectorAll("[data-msg]").forEach(b=>b.onclick=async()=>{
  const value=$(b.dataset.msg).value;
