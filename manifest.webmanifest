@@ -1,0 +1,9 @@
+{
+  "name": "Generador de Mensajes Operativos GRTVM ZOTP",
+  "short_name": "Mensajes GRTVM",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f6fb",
+  "theme_color": "#17365d",
+  "description": "Generador independiente de mensajes operativos con importación de catálogos Excel."
+}
