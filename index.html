@@ -43,13 +43,13 @@ footer{text-align:center;color:#7b8798;font-size:12px;padding:12px}
 <header><h1>Generador de Mensajes Operativos</h1><p>GRTVM · ZOTP · Uso independiente en este iPhone</p></header>
 <main>
 <section class="card">
-<h2>Catálogos y datos locales</h2>
-<p class="subtle">Los datos se guardan en este dispositivo. Importa un Excel para cargar tus catálogos.</p>
-<div class="btnrow">
-<label class="filelabel primary" for="excelFile">📊 Cargar Excel</label><input id="excelFile" type="file" accept=".xlsx,.xls,.csv" hidden>
-<button class="outline" id="templateBtn">Ver formato del Excel</button>
-<button class="danger" id="clearData">Borrar datos locales</button>
+<h2>Catálogos (parte superior)</h2>
+<p class="subtle">Agrega equipos, protecciones, eventos, causas o subestaciones manualmente, o importa un Excel. Los cambios se guardan en este dispositivo.</p>
+<div class="grid cols2">
+<div class="field"><label for="catalogType">Catálogo que deseas modificar</label><select id="catalogType"><option>Equipos</option><option>Protecciones</option><option>Eventos / disparos</option><option>Causas</option><option>Subestaciones</option></select></div>
+<div class="field"><label for="catalogEntry">Nuevo elemento</label><input id="catalogEntry" placeholder="Escribe el equipo o elemento"><p class="hint">Para subestaciones puedes usar AAN | ACTOPAN.</p></div>
 </div>
+<div class="btnrow"><button class="primary" id="addCatalogEntry">＋ Agregar al catálogo</button><label class="filelabel outline" for="excelFile">📊 Importar Excel</label><input id="excelFile" type="file" accept=".xlsx,.xls,.csv" hidden><button class="outline" id="templateBtn">Ver formato del Excel</button><button class="danger" id="clearData">Borrar datos locales</button></div>
 <div class="status" id="catalogStatus">Catálogos de ejemplo cargados. Importa tu archivo para reemplazarlos o completarlos.</div>
 </section>
 <section class="card">

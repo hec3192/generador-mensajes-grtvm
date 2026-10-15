@@ -51,7 +51,12 @@ function generate(){
  const eventLine=`${he} hrs. ${evento} en ${equipo||"[equipo pendiente]"}${protec}.`;
  const normLine=(fn&&hn)?`\n${fn} ${hn} hrs. Normalizado: ${equipo}.`:`\nPendiente de normalizar: ${equipo}.`;
  const antecedentes=get("antecedentes")||"Las Gerencia Regional de Transmisión Valle de México se encontraba en condiciones";
- const grtvm=`NOTA INFORMATIVA DEL EVENTO EN EL ${equipo}\n\n${antecedentes}, ${get("condicion")}. El ${fe||"[fecha pendiente]"} a las ${he} se presentó ${evento.toLowerCase()} en ${equipo}. Causa del evento: ${causa}. ${carga}${obs}`;
+ const tipo="";
+ const causaTexto=causa?` Causa del evento: ${causa}.`:"";
+ const cargaTexto=affected?(mw?`, con afectación de ${mw} MW`: ", con afectación de carga (MW por especificar)"):", sin afectación de carga";
+ const proteccionesTexto=prot?` Protecciones operadas: ${prot}.`:"";
+ const observacionesTexto=get("observaciones")?` Observaciones: ${get("observaciones")}.`:"";
+ const grtvm=`NOTA INFORMATIVA DEL EVENTO EN EL ${equipo||"[equipo pendiente]"}${tipo}\n\n${antecedentes||"Las Gerencia Regional de Transmisión Valle de México se encontraba en condiciones"}, ${get("condicion")||"normales de operación"}. El ${fe||"[fecha pendiente]"} a las ${he} se presentó ${evento.toLowerCase()} en ${equipo||"[equipo pendiente]"}${causaTexto}${cargaTexto}.${proteccionesTexto}${observacionesTexto}`;
  const acr=acronyms();
  const zotp=`*${get("zona")||"ZOT PACHUCA"}*\n\n*Secuencia de Evento:*\n\n${eventLine}${normLine}\n\n${carga}${acronyms()?"\n\n"+acronyms():""}`;
  $("msgGrtvm").value=grtvm;$("msgZotp").value=zotp;$("status").textContent="Mensajes generados. Verifica la información antes de distribuirlos.";
@@ -60,6 +65,18 @@ $("generate").onclick=generate;
 $("newEvent").onclick=()=>{["fechaNorm","horaNorm","observaciones","mw"].forEach(id=>$(id).value="");$("horaEvento").value="00:00:00";$("fechaEvento").value=new Date().toISOString().slice(0,10);$("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));selected={evento:[],equipo:[],proteccion:[],causa:["Se investiga"]};configs.forEach(c=>$(c.input).value="");$("msgGrtvm").value="";$("msgZotp").value="";renderAll();save();$("status").textContent="Formulario limpio."};
 document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{const value=$(b.dataset.copy).value;if(!value)return;try{await navigator.clipboard.writeText(value);$("status").textContent="Mensaje copiado."}catch{$(b.dataset.copy).select();document.execCommand("copy");$("status").textContent="Mensaje copiado."}});
 document.querySelectorAll("[data-msg]").forEach(b=>b.onclick=async()=>{const value=$(b.dataset.msg).value;if(!value){$("status").textContent="Primero genera el mensaje.";return}try{await navigator.clipboard.writeText(value)}catch{}window.open("https://web.whatsapp.com/","_blank");$("status").textContent="Mensaje copiado. Abre WhatsApp y pega el texto en el chat deseado."});
+
+$("addCatalogEntry").onclick=()=>{
+ const category=get("catalogType"), value=get("catalogEntry");
+ if(!value){$("catalogStatus").textContent="Escribe un elemento antes de agregarlo.";return}
+ if(!catalogs[category])catalogs[category]=[];
+ if(catalogs[category].some(x=>norm(x)===norm(value))){$("catalogStatus").textContent="Ese elemento ya existe en el catálogo.";return}
+ catalogs[category].push(value);catalogs[category].sort((a,b)=>a.localeCompare(b,"es"));
+ $("catalogEntry").value="";save();renderAll();
+ $("catalogStatus").textContent=`Elemento agregado a ${category}. Se guardó en este dispositivo.`;
+};
+$("catalogEntry").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("addCatalogEntry").click()}});
+
 $("excelFile").onchange=async e=>{
  const file=e.target.files[0];if(!file)return;
  try{
@@ -68,8 +85,8 @@ $("excelFile").onchange=async e=>{
    else {if(!window.XLSX)throw new Error("No se pudo cargar el lector Excel. Conéctate a internet y vuelve a intentarlo.");const data=await file.arrayBuffer();const wb=XLSX.read(data,{type:"array"});sheets={};wb.SheetNames.forEach(n=>{const rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:""});const vals=rows.slice(1).map(r=>r.filter(v=>v!=="").map(String));const arr=vals.map(r=>r.length>1?`${r[0]} | ${r[1]}`:r[0]).filter(Boolean);sheets[n]=arr})}
    const aliases={"Equipos":["Equipos","Equipo","Equipment"],"Protecciones":["Protecciones","Protecciones operadas"],"Eventos / disparos":["Eventos / disparos","Evento / disparo","Eventos","Eventos y disparos"],"Causas":["Causas","Causa del evento","Causa"],"Subestaciones":["Subestaciones","Subestación","Subestacion"]};
    let imported=0;
-   Object.entries(aliases).forEach(([cat,names])=>{const key=Object.keys(sheets).find(n=>names.some(a=>norm(a)===norm(n)));if(key){catalogs[cat]=[...new Set(sheets[key].map(x=>String(x).trim()).filter(Boolean))];imported+=catalogs[cat].length}});
-   if(!imported){const first=Object.keys(sheets)[0];if(first){catalogs.Equipos=[...new Set(sheets[first].map(String).filter(Boolean))];imported=catalogs.Equipos.length}}
+   Object.entries(aliases).forEach(([cat,names])=>{const key=Object.keys(sheets).find(n=>names.some(a=>norm(a)===norm(n)));if(key){catalogs[cat]=[...new Map([...(catalogs[cat]||[]),...sheets[key].map(x=>String(x).trim()).filter(Boolean)].map(x=>[norm(x),x])).values()];imported+=sheets[key].length}});
+   if(!imported){const first=Object.keys(sheets)[0];if(first){catalogs.Equipos=[...new Map([...(catalogs.Equipos||[]),...sheets[first].map(String).filter(Boolean)].map(x=>[norm(x),x])).values()];imported=sheets[first].length}}
    save();renderAll();$("catalogStatus").textContent=`Excel cargado. ${imported} registros importados. Los datos quedan guardados en este iPhone.`;
  }catch(err){$("catalogStatus").textContent="No se pudo importar: "+err.message}
  e.target.value="";
