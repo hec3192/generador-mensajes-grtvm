@@ -89,7 +89,16 @@ function generate(){
 $("generate").onclick=generate;
 $("newEvent").onclick=()=>{["fechaNorm","horaNorm","mw"].forEach(id=>$(id).value="");$("horaEvento").value="00:00:00";$("fechaEvento").value=new Date().toISOString().slice(0,10);$("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));selected={evento:[],equipo:[],proteccion:[],causa:["Se investiga"]};configs.forEach(c=>$(c.input).value="");$("msgGrtvm").value="";$("msgZotp").value="";renderAll();save();$("status").textContent="Formulario limpio."};
 document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{const value=$(b.dataset.copy).value;if(!value)return;try{await navigator.clipboard.writeText(value);$("status").textContent="Mensaje copiado."}catch{$(b.dataset.copy).select();document.execCommand("copy");$("status").textContent="Mensaje copiado."}});
-document.querySelectorAll("[data-msg]").forEach(b=>b.onclick=async()=>{const value=$(b.dataset.msg).value;if(!value){$("status").textContent="Primero genera el mensaje.";return}try{await navigator.clipboard.writeText(value)}catch{}window.open("https://web.whatsapp.com/","_blank");$("status").textContent="Mensaje copiado. Abre WhatsApp y pega el texto en el chat deseado."});
+document.querySelectorAll("[data-msg]").forEach(b=>b.onclick=async()=>{
+ const value=$(b.dataset.msg).value;
+ if(!value){$("status").textContent="Primero genera el mensaje.";return}
+ const url=`https://wa.me/?text=${encodeURIComponent(value)}`;
+ // WhatsApp Universal Link: en iPhone abre la app instalada si está disponible.
+ // WhatsApp no permite elegir automáticamente un grupo privado por nombre.
+ try{await navigator.clipboard.writeText(value)}catch{}
+ window.location.href=url;
+ $("status").textContent="Abriendo WhatsApp con el mensaje preparado. Selecciona el contacto o grupo y pulsa Enviar.";
+});
 
 $("addCatalogEntry").onclick=()=>{
  const category=get("catalogType"), value=get("catalogEntry");
