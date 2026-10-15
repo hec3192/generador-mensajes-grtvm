@@ -138,7 +138,7 @@ function generate(){
  $("msgGrtvm").value=grtvm;$("msgZotp").value=zotp;$("status").textContent="Mensajes generados con la estructura institucional. Verifica equipo, hora, protecciones, causa y afectación antes de distribuirlos.";
 }
 $("generate").onclick=generate;
-$("newEvent").onclick=()=>{["fechaNorm","horaNorm","mw"].forEach(id=>$(id).value="");setTimePickerValue("horaEvento","00:00:00");setTimePickerValue("horaNorm","");$("fechaEvento").value=new Date().toISOString().slice(0,10);$("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));selected={evento:[],equipo:[],proteccion:[],causa:["Se investiga"]};configs.forEach(c=>$(c.input).value="");$("msgGrtvm").value="";$("msgZotp").value="";renderAll();save();$("status").textContent="Formulario limpio."};
+$("newEvent").onclick=()=>{["fechaNorm","horaNorm","mw"].forEach(id=>$(id).value="");setTimePickerValue("horaEvento","00:00:00");setTimePickerValue("horaNorm","");$("fechaEvento").value=new Date().toISOString().slice(0,10);$("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};configs.forEach(c=>$(c.input).value="");$("msgGrtvm").value="";$("msgZotp").value="";renderAll();save();$("status").textContent="Formulario limpio."};
 document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{const value=$(b.dataset.copy).value;if(!value)return;try{await navigator.clipboard.writeText(value);$("status").textContent="Mensaje copiado."}catch{$(b.dataset.copy).select();document.execCommand("copy");$("status").textContent="Mensaje copiado."}});
 document.querySelectorAll("[data-msg]").forEach(b=>b.onclick=async()=>{
  const value=$(b.dataset.msg).value;
