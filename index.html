@@ -42,11 +42,11 @@ footer{text-align:center;color:#7b8798;font-size:12px;padding:12px}
 </style>
 </head>
 <body>
-<header><h1>Generador de Mensajes Operativos</h1><p>GRTVM · ZOTP · Uso independiente en este iPhone</p></header>
+<header><h1>Generador de Mensajes Operativos</h1><p>GRTVM · ZOTP · Aplicación web para móvil</p></header>
 <main>
 <section class="card">
 <h2>Catálogos (parte superior)</h2>
-<p class="subtle">Agrega equipos, protecciones, eventos, causas o subestaciones manualmente, o importa un Excel. Los cambios se guardan en este dispositivo.</p>
+<div class="btnrow" style="margin:0 0 10px"><button type="button" class="outline small" id="toggleCatalogs" aria-expanded="true">Ocultar catálogos ▲</button></div><div id="catalogContent"><p class="subtle">Agrega equipos, protecciones, eventos, causas o subestaciones manualmente, o importa un Excel. Los cambios se guardan en este dispositivo.</p>
 <div class="grid cols2">
 <div class="field"><label for="catalogType">Catálogo que deseas modificar</label><select id="catalogType"><option>Equipos</option><option>Protecciones</option><option>Eventos / disparos</option><option>Causas</option><option>Subestaciones</option></select></div>
 <div class="field"><label for="catalogEntry">Nuevo elemento</label><input id="catalogEntry" placeholder="Escribe el equipo o elemento"><p class="hint">Para subestaciones puedes usar AAN | ACTOPAN.</p></div>
@@ -61,7 +61,7 @@ footer{text-align:center;color:#7b8798;font-size:12px;padding:12px}
   </div>
   <div id="catalogList" class="catalog-list" aria-live="polite"></div>
   <p class="hint">Aquí puedes revisar los registros guardados en este dispositivo. Usa × para eliminar un elemento del catálogo.</p>
-</div>
+</div></div>
 </section>
 <section class="card">
 <h2>Datos del evento</h2>
