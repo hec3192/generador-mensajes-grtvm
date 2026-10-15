@@ -38,6 +38,7 @@ button,.filelabel{border:0;border-radius:10px;padding:12px 14px;font:600 14px in
 @media(min-width:760px){.grid.cols2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid.cols3{grid-template-columns:repeat(3,minmax(0,1fr))}.msggrid{grid-template-columns:1fr 1fr}header{padding-left:max(18px,calc((100vw - 1060px)/2))}}
 .filelabel{display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .catalog-browser{margin-top:14px;padding-top:13px;border-top:1px solid #e1e7ef}.catalog-browser-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.catalog-browser-head h3{margin:0 0 10px}.catalog-list{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:260px;overflow:auto}.catalog-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;font-size:14px}.catalog-item span{overflow-wrap:anywhere}.catalog-item button{flex-shrink:0;min-height:30px;padding:4px 9px;border-radius:7px;background:#fee2e2;color:#991b1b}.catalog-empty{padding:14px;text-align:center;color:#64748b;background:#f8fafc;border-radius:9px;font-size:13px}
+.history-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}.history-item{border:1px solid #dce4ef;background:#f8fafc;border-radius:10px;padding:12px}.history-item-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.history-item-title{font-weight:700;color:var(--navy);overflow-wrap:anywhere}.history-item-meta{font-size:12px;color:#64748b;margin-top:4px}.history-item-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.history-item-actions button{min-height:34px;padding:7px 10px;font-size:12px}
 footer{text-align:center;color:#7b8798;font-size:12px;padding:12px}
 </style>
 </head>
@@ -82,10 +83,16 @@ footer{text-align:center;color:#7b8798;font-size:12px;padding:12px}
 <div class="field"><label>Carga afectada (MW)</label><input id="mw" type="number" min="0" step="0.1" placeholder="MW" disabled></div>
 <div class="field"><label>Causa del evento</label><input id="searchCausa" placeholder="Escribe para buscar opciones"><div id="resultsCausa" class="results"></div><div id="tagsCausa" class="taglist"></div><small class="subtle">Predeterminado: Se investiga</small></div>
 <div class="field"><label>Condición operativa</label><select id="condicion"><option>normales de operación</option><option>condiciones anormales de operación</option></select></div>
-<div class="field"><label>Zona / encabezado ZOTP</label><input id="zona" value="ZOT PACHUCA"></div>
+
 </div>
-<div class="btnrow"><button type="button" class="primary" id="generate">Generar mensajes</button><button type="button" class="outline" id="newEvent">Nuevo evento / limpiar</button></div>
+<div class="btnrow"><button type="button" class="primary" id="generate">Generar mensajes</button><button type="button" class="outline" id="newEvent">Nuevo evento / limpiar</button><button type="button" class="primary" id="registerEvent">Registrar evento</button><button type="button" class="outline" id="toggleHistory" aria-expanded="false">Consultar / editar historial</button></div>
 <div class="status" id="status"></div>
+<section id="historyPanel" class="catalog-browser" hidden>
+  <div class="catalog-browser-head"><h3>Historial de eventos registrados</h3><span class="subtle" id="historyCount">0 eventos</span></div>
+  <div class="field"><label for="historySearch">Buscar en el historial</label><input id="historySearch" type="search" placeholder="Buscar por equipo, fecha, evento o causa"></div>
+  <div id="historyList" class="history-list"></div>
+  <p class="hint">Los registros se guardan localmente en este dispositivo. Usa Editar para cargar un evento, modificarlo y guardar los cambios.</p>
+</section>
 </section>
 <section class="msggrid">
 <div class="msgpanel"><h3>Mensaje completo GRTVM</h3><textarea id="msgGrtvm" placeholder="Aquí aparecerá el mensaje GRTVM"></textarea><div class="btnrow"><button class="whatsapp" data-msg="msgGrtvm">☏ WhatsApp</button><button class="outline" data-copy="msgGrtvm">Copiar mensaje</button></div></div>
@@ -94,5 +101,5 @@ footer{text-align:center;color:#7b8798;font-size:12px;padding:12px}
 <footer>Aplicación independiente · Datos almacenados localmente en este iPhone</footer>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="app.js?v=14"></script>
+<script src="app.js?v=23"></script>
 </body></html>

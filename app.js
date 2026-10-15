@@ -134,11 +134,89 @@ function generate(){
  const grtvm=`*NOTA INFORMATIVA DEL EVENTO ${estado} EN EL ${equipo}*\n\n${objetivo}\n\n*Antecedentes*\n\n${antecedente}\n\n*Secuencia de Evento:*\n\n${sequence}\n${normLine}\n\n${cargaGRTVM}\n\n*Causa de Evento:*\n\n${causaTexto}.`;
  const cargaZotp=affected?`El evento provocó afectación de carga${mw?` por ${mw} MW`:" (MW por especificar)"}.` : "El evento no provocó afectación de carga.";
  const acr=acronyms();
- const zotp=`*${get("zona")||"ZOT PACHUCA"}*\n\n*Secuencia de Evento:*\n\n${sequence}\n${normLine}\n\n${cargaZotp}${acr?"\n\n"+acr:""}`;
+ const zotp=`*NOTA OPERATIVA ZOTP*\n\n*Secuencia de Evento:*\n\n${sequence}\n${normLine}\n\n${cargaZotp}${acr?"\n\n"+acr:""}`;
  $("msgGrtvm").value=grtvm;$("msgZotp").value=zotp;$("status").textContent="Mensajes generados con la estructura institucional. Verifica equipo, hora, protecciones, causa y afectación antes de distribuirlos.";
 }
 $("generate").onclick=generate;
-$("newEvent").onclick=()=>{["fechaNorm","horaNorm","mw"].forEach(id=>$(id).value="");setTimePickerValue("horaEvento","00:00:00");setTimePickerValue("horaNorm","");$("fechaEvento").value=new Date().toISOString().slice(0,10);$("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};configs.forEach(c=>$(c.input).value="");$("msgGrtvm").value="";$("msgZotp").value="";renderAll();save();$("status").textContent="Formulario limpio."};
+$("newEvent").onclick=()=>{editingHistoryId=null;$("registerEvent").textContent="Registrar evento";["fechaNorm","horaNorm","mw"].forEach(id=>$(id).value="");setTimePickerValue("horaEvento","00:00:00");setTimePickerValue("horaNorm","");
+// Historial local: registrar, consultar, editar y eliminar eventos.
+let historyItems=load("eventHistory_v23",[]);
+let editingHistoryId=null;
+function saveHistory(){localStorage.setItem("eventHistory_v23",JSON.stringify(historyItems));}
+function currentRecord(){
+ return {
+  id: editingHistoryId || ("evt-"+Date.now()+"-"+Math.random().toString(36).slice(2,7)),
+  updatedAt:new Date().toISOString(),
+  fechaEvento:get("fechaEvento"),horaEvento:get("horaEvento"),fechaNorm:get("fechaNorm"),horaNorm:get("horaNorm"),
+  afectacion:get("afectacion"),mw:get("mw"),condicion:get("condicion"),
+  selected:JSON.parse(JSON.stringify(selected)),
+  msgGrtvm:get("msgGrtvm"),msgZotp:get("msgZotp")
+ };
+}
+function historySummary(r){
+ const eq=(r.selected?.equipo||[]).join(", ")||"Sin equipo seleccionado";
+ const ev=(r.selected?.evento||[])[0]||"Disparo";
+ const cause=(r.selected?.causa||[])[0]||"Se investiga";
+ return {title:`${ev} — ${eq}`,meta:`${fmtDate(r.fechaEvento)||"Sin fecha"} · Causa: ${cause} · ${r.afectacion||"Sin afectación"}`};
+}
+function renderHistory(){
+ const query=norm(get("historySearch"));
+ const list=$("historyList");list.innerHTML="";
+ const filtered=[...historyItems].sort((a,b)=>(b.updatedAt||"").localeCompare(a.updatedAt||"")).filter(r=>{
+  const s=historySummary(r);return !query||norm([s.title,s.meta,r.msgGrtvm,r.msgZotp].join(" ")).includes(query);
+ });
+ $("historyCount").textContent=`${filtered.length} evento${filtered.length===1?"":"s"}${query?" encontrados":""}`;
+ if(!filtered.length){const empty=document.createElement("div");empty.className="catalog-empty";empty.textContent=query?"No hay eventos que coincidan con la búsqueda.":"Todavía no hay eventos registrados.";list.append(empty);return;}
+ filtered.forEach(r=>{
+  const item=document.createElement("article");item.className="history-item";
+  const head=document.createElement("div");head.className="history-item-head";
+  const text=document.createElement("div");const title=document.createElement("div");title.className="history-item-title";const summary=historySummary(r);title.textContent=summary.title;
+  const meta=document.createElement("div");meta.className="history-item-meta";meta.textContent=summary.meta;text.append(title,meta);head.append(text);item.append(head);
+  const actions=document.createElement("div");actions.className="history-item-actions";
+  const edit=document.createElement("button");edit.className="primary";edit.textContent="Editar";edit.onclick=()=>loadHistoryRecord(r.id);
+  const view=document.createElement("button");view.className="outline";view.textContent="Ver mensajes";view.onclick=()=>{ $("msgGrtvm").value=r.msgGrtvm||"";$("msgZotp").value=r.msgZotp||"";$("status").textContent="Mensajes del historial cargados para consulta.";document.getElementById("msgGrtvm").scrollIntoView({behavior:"smooth",block:"center"}); };
+  const del=document.createElement("button");del.className="danger";del.textContent="Eliminar";del.onclick=()=>{if(!confirm("¿Eliminar este evento del historial?"))return;historyItems=historyItems.filter(x=>x.id!==r.id);saveHistory();renderHistory();};
+  actions.append(edit,view,del);item.append(actions);list.append(item);
+ });
+}
+function loadHistoryRecord(id){
+ const r=historyItems.find(x=>x.id===id);if(!r)return;
+ editingHistoryId=r.id;
+ $("fechaEvento").value=r.fechaEvento||"";$("horaEvento").value=r.horaEvento||"00:00:00";setTimePickerValue("horaEvento",r.horaEvento||"00:00:00");
+ $("fechaNorm").value=r.fechaNorm||"";$("horaNorm").value=r.horaNorm||"";setTimePickerValue("horaNorm",r.horaNorm||"");
+ $("afectacion").value=r.afectacion||"Sin afectación";$("mw").value=r.mw||"";$("afectacion").dispatchEvent(new Event("change"));
+ $("condicion").value=r.condicion||"normales de operación";
+ selected=JSON.parse(JSON.stringify(r.selected||{evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]}));
+ configs.forEach(c=>$(c.input).value="");renderAll();save();
+ $("msgGrtvm").value=r.msgGrtvm||"";$("msgZotp").value=r.msgZotp||"";
+ $("registerEvent").textContent="Guardar cambios";$("status").textContent="Evento cargado. Modifica los datos y pulsa «Guardar cambios».";
+ $("historyPanel").hidden=true;$("toggleHistory").setAttribute("aria-expanded","false");
+ document.getElementById("fechaEvento").scrollIntoView({behavior:"smooth",block:"start"});
+}
+$("registerEvent").onclick=()=>{
+ if(!$("msgGrtvm").value.trim()||!$("msgZotp").value.trim())generate();
+ if(!$("msgGrtvm").value.trim()||!$("msgZotp").value.trim())return;
+ const record=currentRecord();
+ if(editingHistoryId){
+  const index=historyItems.findIndex(r=>r.id===editingHistoryId);
+  if(index>=0)historyItems[index]={...record,id:editingHistoryId};
+  else historyItems.unshift(record);
+  $("status").textContent="Cambios del evento guardados en el historial.";
+ }else{
+  historyItems.unshift(record);
+  $("status").textContent="Evento registrado correctamente en el historial.";
+ }
+ editingHistoryId=null;saveHistory();renderHistory();$("registerEvent").textContent="Registrar evento";
+};
+$("toggleHistory").onclick=()=>{
+ const panel=$("historyPanel");panel.hidden=!panel.hidden;
+ $("toggleHistory").textContent=panel.hidden?"Consultar / editar historial":"Ocultar historial";
+ $("toggleHistory").setAttribute("aria-expanded",String(!panel.hidden));
+ if(!panel.hidden)renderHistory();
+};
+$("historySearch").addEventListener("input",renderHistory);
+
+$("fechaEvento").value=new Date().toISOString().slice(0,10);$("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};configs.forEach(c=>$(c.input).value="");$("msgGrtvm").value="";$("msgZotp").value="";renderAll();save();$("status").textContent="Formulario limpio."};
 document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{const value=$(b.dataset.copy).value;if(!value)return;try{await navigator.clipboard.writeText(value);$("status").textContent="Mensaje copiado."}catch{$(b.dataset.copy).select();document.execCommand("copy");$("status").textContent="Mensaje copiado."}});
 document.querySelectorAll("[data-msg]").forEach(b=>b.onclick=async()=>{
  const value=$(b.dataset.msg).value;
@@ -178,6 +256,84 @@ $("excelFile").onchange=async e=>{
 };
 $("templateBtn").onclick=()=>alert("El Excel debe tener hojas llamadas: Equipos, Protecciones, Eventos o Eventos / disparos, Causas y Subestaciones. Usa una fila de encabezados. En Subestaciones usa columnas Acrónimo y Descripción. Ejemplo: AAN | ACTOPAN.");
 $("clearData").onclick=()=>{if(confirm("¿Borrar todos los datos locales de los catálogos?")){catalogs=structuredClone(defaultCatalogs);selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};save();renderAll();renderCatalogList();$("catalogStatus").textContent="Catálogos locales borrados."}};
+
+// Historial local: registrar, consultar, editar y eliminar eventos.
+let historyItems=load("eventHistory_v23",[]);
+let editingHistoryId=null;
+function saveHistory(){localStorage.setItem("eventHistory_v23",JSON.stringify(historyItems));}
+function currentRecord(){
+ return {
+  id: editingHistoryId || ("evt-"+Date.now()+"-"+Math.random().toString(36).slice(2,7)),
+  updatedAt:new Date().toISOString(),
+  fechaEvento:get("fechaEvento"),horaEvento:get("horaEvento"),fechaNorm:get("fechaNorm"),horaNorm:get("horaNorm"),
+  afectacion:get("afectacion"),mw:get("mw"),condicion:get("condicion"),
+  selected:JSON.parse(JSON.stringify(selected)),
+  msgGrtvm:get("msgGrtvm"),msgZotp:get("msgZotp")
+ };
+}
+function historySummary(r){
+ const eq=(r.selected?.equipo||[]).join(", ")||"Sin equipo seleccionado";
+ const ev=(r.selected?.evento||[])[0]||"Disparo";
+ const cause=(r.selected?.causa||[])[0]||"Se investiga";
+ return {title:`${ev} — ${eq}`,meta:`${fmtDate(r.fechaEvento)||"Sin fecha"} · Causa: ${cause} · ${r.afectacion||"Sin afectación"}`};
+}
+function renderHistory(){
+ const query=norm(get("historySearch"));
+ const list=$("historyList");list.innerHTML="";
+ const filtered=[...historyItems].sort((a,b)=>(b.updatedAt||"").localeCompare(a.updatedAt||"")).filter(r=>{
+  const s=historySummary(r);return !query||norm([s.title,s.meta,r.msgGrtvm,r.msgZotp].join(" ")).includes(query);
+ });
+ $("historyCount").textContent=`${filtered.length} evento${filtered.length===1?"":"s"}${query?" encontrados":""}`;
+ if(!filtered.length){const empty=document.createElement("div");empty.className="catalog-empty";empty.textContent=query?"No hay eventos que coincidan con la búsqueda.":"Todavía no hay eventos registrados.";list.append(empty);return;}
+ filtered.forEach(r=>{
+  const item=document.createElement("article");item.className="history-item";
+  const head=document.createElement("div");head.className="history-item-head";
+  const text=document.createElement("div");const title=document.createElement("div");title.className="history-item-title";const summary=historySummary(r);title.textContent=summary.title;
+  const meta=document.createElement("div");meta.className="history-item-meta";meta.textContent=summary.meta;text.append(title,meta);head.append(text);item.append(head);
+  const actions=document.createElement("div");actions.className="history-item-actions";
+  const edit=document.createElement("button");edit.className="primary";edit.textContent="Editar";edit.onclick=()=>loadHistoryRecord(r.id);
+  const view=document.createElement("button");view.className="outline";view.textContent="Ver mensajes";view.onclick=()=>{ $("msgGrtvm").value=r.msgGrtvm||"";$("msgZotp").value=r.msgZotp||"";$("status").textContent="Mensajes del historial cargados para consulta.";document.getElementById("msgGrtvm").scrollIntoView({behavior:"smooth",block:"center"}); };
+  const del=document.createElement("button");del.className="danger";del.textContent="Eliminar";del.onclick=()=>{if(!confirm("¿Eliminar este evento del historial?"))return;historyItems=historyItems.filter(x=>x.id!==r.id);saveHistory();renderHistory();};
+  actions.append(edit,view,del);item.append(actions);list.append(item);
+ });
+}
+function loadHistoryRecord(id){
+ const r=historyItems.find(x=>x.id===id);if(!r)return;
+ editingHistoryId=r.id;
+ $("fechaEvento").value=r.fechaEvento||"";$("horaEvento").value=r.horaEvento||"00:00:00";setTimePickerValue("horaEvento",r.horaEvento||"00:00:00");
+ $("fechaNorm").value=r.fechaNorm||"";$("horaNorm").value=r.horaNorm||"";setTimePickerValue("horaNorm",r.horaNorm||"");
+ $("afectacion").value=r.afectacion||"Sin afectación";$("mw").value=r.mw||"";$("afectacion").dispatchEvent(new Event("change"));
+ $("condicion").value=r.condicion||"normales de operación";
+ selected=JSON.parse(JSON.stringify(r.selected||{evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]}));
+ configs.forEach(c=>$(c.input).value="");renderAll();save();
+ $("msgGrtvm").value=r.msgGrtvm||"";$("msgZotp").value=r.msgZotp||"";
+ $("registerEvent").textContent="Guardar cambios";$("status").textContent="Evento cargado. Modifica los datos y pulsa «Guardar cambios».";
+ $("historyPanel").hidden=true;$("toggleHistory").setAttribute("aria-expanded","false");
+ document.getElementById("fechaEvento").scrollIntoView({behavior:"smooth",block:"start"});
+}
+$("registerEvent").onclick=()=>{
+ if(!$("msgGrtvm").value.trim()||!$("msgZotp").value.trim())generate();
+ if(!$("msgGrtvm").value.trim()||!$("msgZotp").value.trim())return;
+ const record=currentRecord();
+ if(editingHistoryId){
+  const index=historyItems.findIndex(r=>r.id===editingHistoryId);
+  if(index>=0)historyItems[index]={...record,id:editingHistoryId};
+  else historyItems.unshift(record);
+  $("status").textContent="Cambios del evento guardados en el historial.";
+ }else{
+  historyItems.unshift(record);
+  $("status").textContent="Evento registrado correctamente en el historial.";
+ }
+ editingHistoryId=null;saveHistory();renderHistory();$("registerEvent").textContent="Registrar evento";
+};
+$("toggleHistory").onclick=()=>{
+ const panel=$("historyPanel");panel.hidden=!panel.hidden;
+ $("toggleHistory").textContent=panel.hidden?"Consultar / editar historial":"Ocultar historial";
+ $("toggleHistory").setAttribute("aria-expanded",String(!panel.hidden));
+ if(!panel.hidden)renderHistory();
+};
+$("historySearch").addEventListener("input",renderHistory);
+
 $("fechaEvento").value=new Date().toISOString().slice(0,10);
 renderAll();
 renderCatalogList();
