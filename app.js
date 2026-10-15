@@ -1,13 +1,14 @@
 const $=id=>document.getElementById(id);
 const defaultCatalogs={
- "Equipos":["AAN CP 1","AAN CP 2","AAN CP 3"],
- "Protecciones":["21","50/51","diferencial"],
- "Eventos / disparos":["Disparo","Alarma","Apertura de línea","Cierra"],
- "Causas":["Se investiga","Desconocida"],
- "Subestaciones":["AAN | ACTOPAN","TCM | TECAMAC","AFM | AEROPUERTO FELIPE ANGELES MANIOBRAS"]
+ "Equipos":[],
+ "Protecciones":[],
+ "Eventos / disparos":[],
+ "Causas":[],
+ "Subestaciones":[]
 };
-let catalogs=load("catalogs",defaultCatalogs);
-let selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};
+// Al usar claves nuevas, la app inicia vacía aunque el navegador conserve datos de versiones anteriores.
+let catalogs=load("catalogs_v19",defaultCatalogs);
+let selected={evento:[],equipo:[],proteccion:[],causa:[]};
 const configs=[
  {key:"evento",input:"searchEvento",results:"resultsEvento",tags:"tagsEvento",catalog:"Eventos / disparos",multi:false},
  {key:"equipo",input:"searchEquipo",results:"resultsEquipo",tags:"tagsEquipo",catalog:"Equipos",multi:true},
@@ -15,7 +16,7 @@ const configs=[
  {key:"causa",input:"searchCausa",results:"resultsCausa",tags:"tagsCausa",catalog:"Causas",multi:false}
 ];
 function load(k,def){try{return JSON.parse(localStorage.getItem(k))||def}catch{return def}}
-function save(){localStorage.setItem("catalogs",JSON.stringify(catalogs));localStorage.setItem("selected",JSON.stringify(selected))}
+function save(){localStorage.setItem("catalogs_v19",JSON.stringify(catalogs));localStorage.setItem("selected_v19",JSON.stringify(selected))}
 function norm(s){return String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim()}
 function render(c){
  const q=norm($(c.input).value), list=(catalogs[c.catalog]||[]).filter(x=>!q||norm(x).includes(q)).filter(x=>!selected[c.key].includes(x));
@@ -176,7 +177,7 @@ $("excelFile").onchange=async e=>{
  e.target.value="";
 };
 $("templateBtn").onclick=()=>alert("El Excel debe tener hojas llamadas: Equipos, Protecciones, Eventos o Eventos / disparos, Causas y Subestaciones. Usa una fila de encabezados. En Subestaciones usa columnas Acrónimo y Descripción. Ejemplo: AAN | ACTOPAN.");
-$("clearData").onclick=()=>{if(confirm("¿Borrar catálogos importados y restaurar los ejemplos?")){catalogs=structuredClone(defaultCatalogs);selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};save();renderAll();renderCatalogList();$("catalogStatus").textContent="Catálogos de ejemplo restaurados."}};
+$("clearData").onclick=()=>{if(confirm("¿Borrar todos los datos locales de los catálogos?")){catalogs=structuredClone(defaultCatalogs);selected={evento:[],equipo:[],proteccion:[],causa:[]};save();renderAll();renderCatalogList();$("catalogStatus").textContent="Catálogos locales borrados."}};
 $("fechaEvento").value=new Date().toISOString().slice(0,10);
 renderAll();
 renderCatalogList();
