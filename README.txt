@@ -14,3 +14,5 @@ PUBLICACIÓN EN GITHUB PAGES:
 5. Cierra la aplicación instalada y vuelve a abrirla. Si aún muestra la versión anterior, abre la página en Safari y recárgala; si persiste, elimina el acceso directo y vuelve a añadirlo desde Safari.
 
 Importante: valida los mensajes con datos de prueba antes de distribuirlos.
+
+Versión 9: los botones de WhatsApp usan whatsapp://send?text= para intentar abrir directamente la app instalada. El texto se copia antes como alternativa si iOS bloquea el enlace.

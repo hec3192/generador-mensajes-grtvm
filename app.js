@@ -92,12 +92,12 @@ document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{const va
 document.querySelectorAll("[data-msg]").forEach(b=>b.onclick=async()=>{
  const value=$(b.dataset.msg).value;
  if(!value){$("status").textContent="Primero genera el mensaje.";return}
- const url=`https://wa.me/?text=${encodeURIComponent(value)}`;
- // WhatsApp Universal Link: en iPhone abre la app instalada si está disponible.
- // WhatsApp no permite elegir automáticamente un grupo privado por nombre.
+ // Invocar directamente la app instalada evita la redirección a web.whatsapp.com
+ // que puede ocurrir con wa.me dentro de navegadores integrados de iOS.
  try{await navigator.clipboard.writeText(value)}catch{}
- window.location.href=url;
- $("status").textContent="Abriendo WhatsApp con el mensaje preparado. Selecciona el contacto o grupo y pulsa Enviar.";
+ const appUrl=`whatsapp://send?text=${encodeURIComponent(value)}`;
+ $("status").textContent="Intentando abrir la aplicación WhatsApp. Si no se abre, el mensaje quedó copiado para pegarlo manualmente.";
+ window.location.href=appUrl;
 });
 
 $("addCatalogEntry").onclick=()=>{
