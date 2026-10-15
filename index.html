@@ -36,6 +36,7 @@ button,.filelabel{border:0;border-radius:10px;padding:12px 14px;font:600 14px in
 .subtle{font-size:12px;color:#64748b}.checkline{display:flex;align-items:center;gap:8px}.checkline input{width:20px;min-height:20px}
 @media(min-width:760px){.grid.cols2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid.cols3{grid-template-columns:repeat(3,minmax(0,1fr))}.msggrid{grid-template-columns:1fr 1fr}header{padding-left:max(18px,calc((100vw - 1060px)/2))}}
 .filelabel{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.catalog-browser{margin-top:14px;padding-top:13px;border-top:1px solid #e1e7ef}.catalog-browser-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.catalog-browser-head h3{margin:0 0 10px}.catalog-list{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:260px;overflow:auto}.catalog-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;font-size:14px}.catalog-item span{overflow-wrap:anywhere}.catalog-item button{flex-shrink:0;min-height:30px;padding:4px 9px;border-radius:7px;background:#fee2e2;color:#991b1b}.catalog-empty{padding:14px;text-align:center;color:#64748b;background:#f8fafc;border-radius:9px;font-size:13px}
 footer{text-align:center;color:#7b8798;font-size:12px;padding:12px}
 </style>
 </head>
@@ -51,6 +52,15 @@ footer{text-align:center;color:#7b8798;font-size:12px;padding:12px}
 </div>
 <div class="btnrow"><button class="primary" id="addCatalogEntry">＋ Agregar al catálogo</button><label class="filelabel outline" for="excelFile">📊 Importar Excel</label><input id="excelFile" type="file" accept=".xlsx,.xls,.csv" hidden><button class="outline" id="templateBtn">Ver formato del Excel</button><button class="danger" id="clearData">Borrar datos locales</button></div>
 <div class="status" id="catalogStatus">Catálogos de ejemplo cargados. Importa tu archivo para reemplazarlos o completarlos.</div>
+<div class="catalog-browser">
+  <div class="catalog-browser-head"><h3>Datos actuales del catálogo</h3><span class="subtle" id="catalogCount">0 elementos</span></div>
+  <div class="grid cols2">
+    <div class="field"><label for="catalogSearch">Buscar dentro del catálogo</label><input id="catalogSearch" type="search" placeholder="Filtrar por nombre, clave o descripción"></div>
+    <div class="field"><label for="catalogSort">Orden</label><select id="catalogSort"><option value="asc">Alfabético A–Z</option><option value="desc">Alfabético Z–A</option></select></div>
+  </div>
+  <div id="catalogList" class="catalog-list" aria-live="polite"></div>
+  <p class="hint">Aquí puedes revisar los registros guardados en este dispositivo. Usa × para eliminar un elemento del catálogo.</p>
+</div>
 </section>
 <section class="card">
 <h2>Datos del evento</h2>
@@ -72,8 +82,6 @@ footer{text-align:center;color:#7b8798;font-size:12px;padding:12px}
 <div class="field"><label>Causa del evento</label><input id="searchCausa" placeholder="Escribe para buscar opciones"><div id="resultsCausa" class="results"></div><div id="tagsCausa" class="taglist"></div></div>
 <div class="field"><label>Condición operativa</label><select id="condicion"><option>normales de operación</option><option>condiciones anormales de operación</option></select></div>
 <div class="field"><label>Zona / encabezado ZOTP</label><input id="zona" value="ZOT PACHUCA"></div>
-<div class="field"><label>Antecedentes GRTVM</label><input id="antecedentes" value="Las Gerencia Regional de Transmisión Valle de México se encontraba en condiciones"></div>
-<div class="field"><label>Observaciones (opcional)</label><input id="observaciones" placeholder="Escribe observaciones"></div>
 </div>
 <div class="btnrow"><button class="primary" id="generate">Generar mensajes</button><button class="outline" id="newEvent">Nuevo evento / limpiar</button></div>
 <div class="status" id="status"></div>

@@ -30,6 +30,22 @@ configs.forEach(c=>$(c.input).addEventListener("input",()=>render(c)));
 $("clearEquipos").onclick=()=>{selected.equipo=[];renderAll();save()};
 $("afectacion").onchange=()=>{$("mw").disabled=$("afectacion").value!=="Con afectación";if($("mw").disabled)$("mw").value=""};
 $("mw").disabled=true;
+
+function renderCatalogList(){
+ const category=get("catalogType"), query=norm(get("catalogSearch"));
+ let items=[...(catalogs[category]||[])];
+ if(query)items=items.filter(x=>norm(x).includes(query));
+ items.sort((a,b)=>a.localeCompare(b,"es",{sensitivity:"base"}));
+ if(get("catalogSort")==="desc")items.reverse();
+ $("catalogCount").textContent=`${items.length} elemento${items.length===1?"":"s"}${query?" encontrados":""}`;
+ const box=$("catalogList");box.innerHTML="";
+ if(!items.length){const empty=document.createElement("div");empty.className="catalog-empty";empty.textContent=query?"No hay elementos que coincidan con la búsqueda.":"Este catálogo todavía no tiene elementos.";box.append(empty);return;}
+ items.forEach(item=>{const row=document.createElement("div");row.className="catalog-item";const label=document.createElement("span");label.textContent=item;const del=document.createElement("button");del.type="button";del.textContent="× Eliminar";del.title="Eliminar este elemento del catálogo";del.onclick=()=>{if(!confirm(`¿Eliminar "${item}" del catálogo ${category}?`))return;catalogs[category]=(catalogs[category]||[]).filter(x=>x!==item);configs.forEach(c=>{if(c.catalog===category)selected[c.key]=selected[c.key].filter(x=>x!==item)});save();renderAll();renderCatalogList();$("catalogStatus").textContent=`Elemento eliminado de ${category}.`;};row.append(label,del);box.append(row)});
+}
+$("catalogType").addEventListener("change",renderCatalogList);
+$("catalogSearch").addEventListener("input",renderCatalogList);
+$("catalogSort").addEventListener("change",renderCatalogList);
+
 function get(id){return $(id).value.trim()}
 function fmtDate(v){if(!v)return "";const [y,m,d]=v.split("-");return `${d}/${m}/${y}`}
 function acronyms(){
@@ -47,22 +63,23 @@ function generate(){
  const affected=get("afectacion")==="Con afectación", mw=get("mw");
  const carga=affected?`El evento provocó afectación de carga${mw?` por ${mw} MW`:" (MW por especificar)"}.`:"El evento no provocó afectación de carga.";
  const protec=prot?`\nProtecciones operadas: ${prot}.`:"";
- const obs=get("observaciones")?`\nObservaciones: ${get("observaciones")}.`:"";
  const eventLine=`${he} hrs. ${evento} en ${equipo||"[equipo pendiente]"}${protec}.`;
  const normLine=(fn&&hn)?`\n${fn} ${hn} hrs. Normalizado: ${equipo}.`:`\nPendiente de normalizar: ${equipo}.`;
- const antecedentes=get("antecedentes")||"Las Gerencia Regional de Transmisión Valle de México se encontraba en condiciones";
  const tipo="";
  const causaTexto=causa?` Causa del evento: ${causa}.`:"";
  const cargaTexto=affected?(mw?`, con afectación de ${mw} MW`: ", con afectación de carga (MW por especificar)"):", sin afectación de carga";
  const proteccionesTexto=prot?` Protecciones operadas: ${prot}.`:"";
- const observacionesTexto=get("observaciones")?` Observaciones: ${get("observaciones")}.`:"";
- const grtvm=`NOTA INFORMATIVA DEL EVENTO EN EL ${equipo||"[equipo pendiente]"}${tipo}\n\n${antecedentes||"Las Gerencia Regional de Transmisión Valle de México se encontraba en condiciones"}, ${get("condicion")||"normales de operación"}. El ${fe||"[fecha pendiente]"} a las ${he} se presentó ${evento.toLowerCase()} en ${equipo||"[equipo pendiente]"}${causaTexto}${cargaTexto}.${proteccionesTexto}${observacionesTexto}`;
+ const antecedente="Las Gerencia Regional de Transmisión Valle de México se encontraba en condiciones";
+ const condicion=get("condicion")||"normales de operación";
+ const cargaGRTVM=affected?(mw?`El evento provocó afectación de carga por ${mw} MW.`:"El evento provocó afectación de carga (MW por especificar).") : "El evento no provocó afectación de carga.";
+ const proteccionesGRTVM=prot?`\nProtecciones operadas: ${prot}.`:"";
+ const grtvm=`NOTA INFORMATIVA DEL EVENTO EN EL ${equipo||"[equipo pendiente]"}${tipo}\n\n${antecedente} ${condicion}. El ${fe||"[fecha pendiente]"} a las ${he} se presentó ${evento.toLowerCase()} en ${equipo||"[equipo pendiente]"}.${causaTexto}${cargaGRTVM}${proteccionesGRTVM}`;
  const acr=acronyms();
  const zotp=`*${get("zona")||"ZOT PACHUCA"}*\n\n*Secuencia de Evento:*\n\n${eventLine}${normLine}\n\n${carga}${acronyms()?"\n\n"+acronyms():""}`;
  $("msgGrtvm").value=grtvm;$("msgZotp").value=zotp;$("status").textContent="Mensajes generados. Verifica la información antes de distribuirlos.";
 }
 $("generate").onclick=generate;
-$("newEvent").onclick=()=>{["fechaNorm","horaNorm","observaciones","mw"].forEach(id=>$(id).value="");$("horaEvento").value="00:00:00";$("fechaEvento").value=new Date().toISOString().slice(0,10);$("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));selected={evento:[],equipo:[],proteccion:[],causa:["Se investiga"]};configs.forEach(c=>$(c.input).value="");$("msgGrtvm").value="";$("msgZotp").value="";renderAll();save();$("status").textContent="Formulario limpio."};
+$("newEvent").onclick=()=>{["fechaNorm","horaNorm","mw"].forEach(id=>$(id).value="");$("horaEvento").value="00:00:00";$("fechaEvento").value=new Date().toISOString().slice(0,10);$("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));selected={evento:[],equipo:[],proteccion:[],causa:["Se investiga"]};configs.forEach(c=>$(c.input).value="");$("msgGrtvm").value="";$("msgZotp").value="";renderAll();save();$("status").textContent="Formulario limpio."};
 document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{const value=$(b.dataset.copy).value;if(!value)return;try{await navigator.clipboard.writeText(value);$("status").textContent="Mensaje copiado."}catch{$(b.dataset.copy).select();document.execCommand("copy");$("status").textContent="Mensaje copiado."}});
 document.querySelectorAll("[data-msg]").forEach(b=>b.onclick=async()=>{const value=$(b.dataset.msg).value;if(!value){$("status").textContent="Primero genera el mensaje.";return}try{await navigator.clipboard.writeText(value)}catch{}window.open("https://web.whatsapp.com/","_blank");$("status").textContent="Mensaje copiado. Abre WhatsApp y pega el texto en el chat deseado."});
 
@@ -72,7 +89,7 @@ $("addCatalogEntry").onclick=()=>{
  if(!catalogs[category])catalogs[category]=[];
  if(catalogs[category].some(x=>norm(x)===norm(value))){$("catalogStatus").textContent="Ese elemento ya existe en el catálogo.";return}
  catalogs[category].push(value);catalogs[category].sort((a,b)=>a.localeCompare(b,"es"));
- $("catalogEntry").value="";save();renderAll();
+ $("catalogEntry").value="";save();renderAll();renderCatalogList();
  $("catalogStatus").textContent=`Elemento agregado a ${category}. Se guardó en este dispositivo.`;
 };
 $("catalogEntry").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("addCatalogEntry").click()}});
@@ -87,12 +104,13 @@ $("excelFile").onchange=async e=>{
    let imported=0;
    Object.entries(aliases).forEach(([cat,names])=>{const key=Object.keys(sheets).find(n=>names.some(a=>norm(a)===norm(n)));if(key){catalogs[cat]=[...new Map([...(catalogs[cat]||[]),...sheets[key].map(x=>String(x).trim()).filter(Boolean)].map(x=>[norm(x),x])).values()];imported+=sheets[key].length}});
    if(!imported){const first=Object.keys(sheets)[0];if(first){catalogs.Equipos=[...new Map([...(catalogs.Equipos||[]),...sheets[first].map(String).filter(Boolean)].map(x=>[norm(x),x])).values()];imported=sheets[first].length}}
-   save();renderAll();$("catalogStatus").textContent=`Excel cargado. ${imported} registros importados. Los datos quedan guardados en este iPhone.`;
+   save();renderAll();renderCatalogList();$("catalogStatus").textContent=`Excel cargado. ${imported} registros importados. Los datos quedan guardados en este iPhone.`;
  }catch(err){$("catalogStatus").textContent="No se pudo importar: "+err.message}
  e.target.value="";
 };
 $("templateBtn").onclick=()=>alert("El Excel debe tener hojas llamadas: Equipos, Protecciones, Eventos o Eventos / disparos, Causas y Subestaciones. Usa una fila de encabezados. En Subestaciones usa columnas Acrónimo y Descripción. Ejemplo: AAN | ACTOPAN.");
-$("clearData").onclick=()=>{if(confirm("¿Borrar catálogos importados y restaurar los ejemplos?")){catalogs=structuredClone(defaultCatalogs);selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};save();renderAll();$("catalogStatus").textContent="Catálogos de ejemplo restaurados."}};
+$("clearData").onclick=()=>{if(confirm("¿Borrar catálogos importados y restaurar los ejemplos?")){catalogs=structuredClone(defaultCatalogs);selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};save();renderAll();renderCatalogList();$("catalogStatus").textContent="Catálogos de ejemplo restaurados."}};
 $("fechaEvento").value=new Date().toISOString().slice(0,10);
 renderAll();
+renderCatalogList();
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
