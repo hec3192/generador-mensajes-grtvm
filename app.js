@@ -4,7 +4,8 @@ const defaultCatalogs={
  "Protecciones":[],
  "Eventos / disparos":[],
  "Causas":[],
- "Subestaciones":[]
+ "Subestaciones":[],
+ "Condición operativa":["normales de operación","condiciones anormales de operación"]
 };
 // Al usar claves nuevas, la app inicia vacía aunque el navegador conserve datos de versiones anteriores.
 let catalogs=load("catalogs_v19",defaultCatalogs);
@@ -26,7 +27,17 @@ function render(c){
  const tags=$(c.tags);tags.innerHTML="";
  selected[c.key].forEach(item=>{const t=document.createElement("span");t.className="tag";const s=document.createElement("span");s.textContent=item;const b=document.createElement("button");b.type="button";b.setAttribute("aria-label","Quitar "+item);b.textContent="×";b.onclick=()=>{selected[c.key]=selected[c.key].filter(x=>x!==item);renderAll();save()};t.append(s,b);tags.append(t)});
 }
-function renderAll(){configs.forEach(render)}
+function renderCondiciones(){
+ const select=$("condicion");
+ const current=select.value || "normales de operación";
+ select.innerHTML="";
+ (catalogs["Condición operativa"]||[]).forEach(item=>{
+   const opt=document.createElement("option"); opt.value=item; opt.textContent=item; select.append(opt);
+ });
+ if((catalogs["Condición operativa"]||[]).includes(current)) select.value=current;
+ else if((catalogs["Condición operativa"]||[]).length) select.selectedIndex=0;
+}
+function renderAll(){configs.forEach(render);renderCondiciones()}
 configs.forEach(c=>$(c.input).addEventListener("input",()=>render(c)));
 $("clearEquipos").onclick=()=>{selected.equipo=[];renderAll();save()};
 $("afectacion").onchange=()=>{$("mw").disabled=$("afectacion").value!=="Con afectación";if($("mw").disabled)$("mw").value=""};

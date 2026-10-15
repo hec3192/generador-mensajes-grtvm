@@ -49,7 +49,7 @@ footer{text-align:center;color:#7b8798;font-size:12px;padding:12px}
 <h2>Catálogos (parte superior)</h2>
 <div class="btnrow" style="margin:0 0 10px"><button type="button" class="outline small" id="toggleCatalogs" aria-expanded="false" onclick="var c=document.getElementById('catalogContent');var h=!c.hidden;c.hidden=h;this.textContent=h?'Mostrar catálogos ▼':'Ocultar catálogos ▲';this.setAttribute('aria-expanded',String(!h));try{localStorage.setItem('grtvm_catalogos_ocultos_v1',h?'1':'0')}catch(e){}">Mostrar catálogos ▼</button></div><div id="catalogContent" hidden><p class="subtle">Agrega equipos, protecciones, eventos, causas o subestaciones manualmente, o importa un Excel. Los cambios se guardan en este dispositivo.</p>
 <div class="grid cols2">
-<div class="field"><label for="catalogType">Catálogo que deseas modificar</label><select id="catalogType"><option>Equipos</option><option>Protecciones</option><option>Eventos / disparos</option><option>Causas</option><option>Subestaciones</option></select></div>
+<div class="field"><label for="catalogType">Catálogo que deseas modificar</label><select id="catalogType"><option>Equipos</option><option>Protecciones</option><option>Eventos / disparos</option><option>Causas</option><option>Subestaciones</option><option>Condición operativa</option></select></div>
 <div class="field"><label for="catalogEntry">Nuevo elemento</label><input id="catalogEntry" placeholder="Escribe el equipo o elemento"><p class="hint">Para subestaciones puedes usar AAN | ACTOPAN.</p></div>
 </div>
 <div class="btnrow"><button class="primary" id="addCatalogEntry">＋ Agregar al catálogo</button><label class="filelabel outline" for="excelFile">📊 Importar Excel</label><input id="excelFile" type="file" accept=".xlsx,.xls,.csv" hidden><button class="outline" id="templateBtn">Ver formato del Excel</button><button class="danger" id="clearData">Borrar datos locales</button></div>
@@ -82,7 +82,7 @@ footer{text-align:center;color:#7b8798;font-size:12px;padding:12px}
 <div class="field"><label>Afectación de carga</label><select id="afectacion"><option>Sin afectación</option><option>Con afectación</option></select></div>
 <div class="field"><label>Carga afectada (MW)</label><input id="mw" type="number" min="0" step="0.1" placeholder="MW" disabled></div>
 <div class="field"><label>Causa del evento</label><input id="searchCausa" placeholder="Escribe para buscar opciones"><div id="resultsCausa" class="results"></div><div id="tagsCausa" class="taglist"></div><small class="subtle">Predeterminado: Se investiga</small></div>
-<div class="field"><label>Condición operativa</label><select id="condicion"><option>normales de operación</option><option>condiciones anormales de operación</option></select></div>
+<div class="field"><label>Condición operativa</label><select id="condicion"></select></div>
 
 </div>
 <div class="btnrow"><button type="button" class="primary" id="generate">Generar mensajes</button><button type="button" class="outline" id="newEvent">Nuevo evento / limpiar</button><button type="button" class="primary" id="registerEvent">Registrar evento</button><button type="button" class="outline" id="toggleHistory" aria-expanded="false">Consultar / editar historial</button></div>
