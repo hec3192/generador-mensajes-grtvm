@@ -257,7 +257,7 @@ $("excelFile").onchange=async e=>{
    let sheets;
    if(file.name.toLowerCase().endsWith(".csv")){const txt=await file.text();sheets={"Equipos":txt.split(/\r?\n/).map(x=>x.split(",")[0]).filter(Boolean)}}
    else {if(!window.XLSX)throw new Error("No se pudo cargar el lector Excel. Conéctate a internet y vuelve a intentarlo.");const data=await file.arrayBuffer();const wb=XLSX.read(data,{type:"array"});sheets={};wb.SheetNames.forEach(n=>{const rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:""});const vals=rows.slice(1).map(r=>r.filter(v=>v!=="").map(String));const arr=vals.map(r=>r.length>1?`${r[0]} | ${r[1]}`:r[0]).filter(Boolean);sheets[n]=arr})}
-   const aliases={"Equipos":["Equipos","Equipo","Equipment"],"Protecciones":["Protecciones","Protecciones operadas"],"Eventos / disparos":["Eventos / disparos","Evento / disparo","Eventos","Eventos y disparos"],"Causas":["Causas","Causa del evento","Causa"],"Subestaciones":["Subestaciones","Subestación","Subestacion"]};
+   const aliases={"Equipos":["Equipos","Equipo","Equipment"],"Protecciones":["Protecciones","Protecciones operadas"],"Eventos / disparos":["Eventos / disparos","Evento / disparo","Eventos","Eventos y disparos"],"Causas":["Causas","Causa del evento","Causa"],"Subestaciones":["Subestaciones","Subestación","Subestacion"],"Condición operativa":["Condición operativa","Condicion operativa","Condiciones operativas","Condición de operación","Condiciones de operación"]};
    let imported=0;
    Object.entries(aliases).forEach(([cat,names])=>{const key=Object.keys(sheets).find(n=>names.some(a=>norm(a)===norm(n)));if(key){catalogs[cat]=[...new Map([...(catalogs[cat]||[]),...sheets[key].map(x=>String(x).trim()).filter(Boolean)].map(x=>[norm(x),x])).values()];imported+=sheets[key].length}});
    if(!imported){const first=Object.keys(sheets)[0];if(first){catalogs.Equipos=[...new Map([...(catalogs.Equipos||[]),...sheets[first].map(String).filter(Boolean)].map(x=>[norm(x),x])).values()];imported=sheets[first].length}}
@@ -265,8 +265,24 @@ $("excelFile").onchange=async e=>{
  }catch(err){$("catalogStatus").textContent="No se pudo importar: "+err.message}
  e.target.value="";
 };
-$("templateBtn").onclick=()=>alert("El Excel debe tener hojas llamadas: Equipos, Protecciones, Eventos o Eventos / disparos, Causas y Subestaciones. Usa una fila de encabezados. En Subestaciones usa columnas Acrónimo y Descripción. Ejemplo: AAN | ACTOPAN.");
-$("clearData").onclick=()=>{if(confirm("¿Borrar todos los datos locales de los catálogos?")){catalogs=structuredClone(defaultCatalogs);selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};save();renderAll();renderCatalogList();$("catalogStatus").textContent="Catálogos locales borrados."}};
+$("templateBtn").onclick=()=>{
+ try{
+  if(!window.XLSX){$("catalogStatus").textContent="No se pudo crear la plantilla Excel. Conéctate a internet y vuelve a intentarlo.";return}
+  const wb=XLSX.utils.book_new();
+  const sheets=[
+   ["Equipos",["Equipo"]],
+   ["Protecciones",["Protección"]],
+   ["Eventos",["Evento / disparo"]],
+   ["Causas",["Causa"]],
+   ["Subestaciones",["Acrónimo","Descripción"]],
+   ["Condición operativa",["Condición operativa"]]
+  ];
+  sheets.forEach(([name,headers])=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([headers, ...((name==="Condición operativa")?[["normales de operación"],["condiciones anormales de operación"]]:[])]),name));
+  XLSX.writeFile(wb,"Plantilla_Catalogos_GRTVM_ZOTP.xlsx");
+  $("catalogStatus").textContent="Plantilla Excel descargada. Llena las hojas y vuelve a importar el archivo.";
+ }catch(err){$("catalogStatus").textContent="No se pudo descargar la plantilla: "+err.message}
+};
+$("clearData").onclick=()=>{if(confirm("¿Eliminar todos los datos de TODOS los catálogos de este dispositivo? Esta acción no se puede deshacer.")){catalogs={ "Equipos":[], "Protecciones":[], "Eventos / disparos":[], "Causas":[], "Subestaciones":[], "Condición operativa":[] };selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};save();renderAll();renderCatalogList();$("catalogStatus").textContent="Todos los catálogos quedaron vacíos. Los valores predeterminados del formulario se conservan.";}};
 
 // Historial local: registrar, consultar, editar y eliminar eventos.
 let historyItems=load("eventHistory_v23",[]);
