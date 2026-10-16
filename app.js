@@ -426,59 +426,81 @@ $("templateBtn").onclick=()=>{
  $("catalogStatus").textContent="Se solicitó la descarga de la plantilla. Si no inicia, verifica que Plantilla_Catalogos_GRTVM_ZOTP.xlsx esté publicado junto a index.html.";
 };
 
-$("exportCatalogs").onclick=()=>{
+$("exportCatalogs").onclick=async()=>{
  try{
-   if(!window.XLSX){
-     const exportMap=[["Equipos","Equipo"],["Protecciones","Protección"],["Eventos / disparos","Evento / disparo"],["Causas","Causa"],["Subestaciones","Acrónimo,Descripción"],["Condición operativa","Condición operativa"],["Afectación de carga","Afectación de carga"]];
+   const stamp=new Date().toISOString().slice(0,10);
+   const exportMap=[
+     {category:"Equipos",sheet:"Equipos",header:["Equipo"]},
+     {category:"Protecciones",sheet:"Protecciones",header:["Protección"]},
+     {category:"Eventos / disparos",sheet:"Eventos",header:["Evento / disparo"]},
+     {category:"Causas",sheet:"Causas",header:["Causa"]},
+     {category:"Subestaciones",sheet:"Subestaciones",header:["Acrónimo","Descripción"]},
+     {category:"Condición operativa",sheet:"Condición operativa",header:["Condición operativa"]},
+     {category:"Afectación de carga",sheet:"Afectación de carga",header:["Afectación de carga"]}
+   ];
+   const csvFallback=()=>{
      const quote=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
      const lines=["Catálogo,Registro"];
-     exportMap.forEach(([category])=>(catalogs[category]||[]).forEach(value=>lines.push(quote(category)+","+quote(value))));
-     const blob=new Blob(["\ufeff"+lines.join("\r\n")],{type:"text/csv;charset=utf-8;"});
-     const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="Catalogos_GRTVM_ZOTP.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
-     $("catalogStatus").textContent="La biblioteca XLSX no está disponible; se descargó un CSV compatible con Excel con los datos actuales.";
-     return;
-   }
-   const wb=XLSX.utils.book_new();
-   const exportMap=[
-     ["Equipos","Equipo"],
-     ["Protecciones","Protección"],
-     ["Eventos / disparos","Evento / disparo"],
-     ["Causas","Causa"],
-     ["Subestaciones","Acrónimo y descripción"],
-     ["Condición operativa","Condición operativa"],
-    ["Afectación de carga","Afectación de carga"]
-   ];
-   exportMap.forEach(([category,header])=>{
-     const values=(catalogs[category]||[]).map(value=>{
-       const text=String(value??"").trim();
-       if(category==="Subestaciones"){
-         const parts=text.split(/\s*[|–-]\s*/);
-         return [parts[0]||"",parts.slice(1).join(" - ")||""];
-       }
-       return [text];
-     }).filter(row=>row.some(cell=>String(cell).trim()!==""));
-     const rows=[[header],...values];
-     const ws=XLSX.utils.aoa_to_sheet(rows);
-     ws["!cols"]=category==="Subestaciones"?[{wch:20},{wch:42}]:[{wch:42}];
-     XLSX.utils.book_append_sheet(wb,ws,category==="Eventos / disparos"?"Eventos":category==="Condición operativa"?"Condicion operativa":category);
-   });
-   const instructions=XLSX.utils.aoa_to_sheet([
-     ["EXPORTACIÓN DE CATÁLOGOS | GRTVM – ZOTP"],
-     ["Datos guardados actualmente en este dispositivo."],
-     ["Puedes utilizar las hojas de catálogo como respaldo o volver a importarlas en la aplicación."]
-   ]);
-   XLSX.utils.book_append_sheet(wb,instructions,"Información");
-   const stamp=new Date().toISOString().slice(0,10);
-   try{
-     XLSX.writeFile(wb,`Catalogos_GRTVM_ZOTP_${stamp}.xlsx`);
-     $("catalogStatus").textContent="Exportación completada. Se descargó un Excel con los catálogos guardados actualmente en este dispositivo.";
-   }catch(writeErr){
-     const lines=["Catálogo,Registro"];
-     exportMap.forEach(([category])=>(catalogs[category]||[]).forEach(value=>lines.push('"'+category.replace(/"/g,'""')+'","'+String(value??"").replace(/"/g,'""')+'"')));
+     exportMap.forEach(({category})=>(catalogs[category]||[]).forEach(value=>lines.push(quote(category)+","+quote(value))));
      const blob=new Blob(["\ufeff"+lines.join("\r\n")],{type:"text/csv;charset=utf-8;"});
      const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`Catalogos_GRTVM_ZOTP_${stamp}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
-     $("catalogStatus").textContent="No se pudo generar XLSX; se descargó un CSV compatible con Excel.";
+   };
+   if(!window.XLSX){csvFallback();$("catalogStatus").textContent="La biblioteca XLSX no está disponible; se descargó un CSV compatible con Excel con los datos actuales.";return;}
+   // Partir de la plantilla oficial para conservar hojas, títulos, encabezados, anchos y estilos.
+   let wb;
+   try{
+     const response=await fetch("./Plantilla_Catalogos_GRTVM_ZOTP.xlsx",{cache:"no-store"});
+     if(!response.ok)throw new Error("No se pudo cargar la plantilla publicada");
+     wb=XLSX.read(await response.arrayBuffer(),{type:"array",cellStyles:true});
+   }catch(templateErr){
+     // Si no se puede recuperar la plantilla, generar un libro con las mismas hojas y encabezados.
+     wb=XLSX.utils.book_new();
+     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["PLANTILLA DE CATÁLOGOS | GRTVM – ZOTP"],["Formato de exportación de los catálogos actuales"]]),"Instrucciones");
+     exportMap.forEach(({sheet,header})=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([[`CATÁLOGO: ${sheet.toUpperCase()}`],["Capture un registro por fila. No modifique los encabezados."],header]),sheet));
    }
+   exportMap.forEach(({category,sheet,header})=>{
+     let ws=wb.Sheets[sheet];
+     if(!ws){
+       ws=XLSX.utils.aoa_to_sheet([[`CATÁLOGO: ${sheet.toUpperCase()}`],["Capture un registro por fila. No modifique los encabezados."],header]);
+       wb.Sheets[sheet]=ws;wb.SheetNames.push(sheet);
+     }
+     // La plantilla tiene títulos en filas 1-2 y encabezados en fila 3; se conservan y se reemplazan los datos.
+     const range=XLSX.utils.decode_range(ws["!ref"]||"A1:A3");
+     // Guardar estilos de las primeras filas de datos de la plantilla para aplicarlos a las nuevas filas.
+     const styleSamples=[];
+     for(let sampleRow=3;sampleRow<=Math.min(range.e.r,4);sampleRow++){
+       const sample=[];
+       for(let c=0;c<header.length;c++){
+         const cell=ws[XLSX.utils.encode_cell({r:sampleRow,c})];
+         sample.push(cell&&cell.s?JSON.parse(JSON.stringify(cell.s)):null);
+       }
+       styleSamples.push(sample);
+     }
+     for(let r=3;r<=range.e.r;r++)for(let c=0;c<Math.max(range.e.c+1,header.length);c++){
+       const addr=XLSX.utils.encode_cell({r,c});
+       if(ws[addr])delete ws[addr];
+     }
+     const values=(catalogs[category]||[]).map(value=>{
+       const txt=String(value??"").trim();
+       if(category==="Subestaciones"){
+         const parts=txt.split(/\s*[|–-]\s*/);return [parts[0]||"",parts.slice(1).join(" - ")||""];
+       }
+       return [txt];
+     }).filter(row=>row.some(cell=>String(cell).trim()!==""));
+     values.forEach((row,i)=>row.forEach((value,c)=>{const addr=XLSX.utils.encode_cell({r:i+3,c});const style=styleSamples.length?styleSamples[i%styleSamples.length][c]:null;ws[addr]=style?{t:"s",v:value,s:style}:{t:"s",v:value};}));
+     const lastRow=Math.max(2,values.length+2);
+     ws["!ref"]=`A1:${XLSX.utils.encode_col(Math.max(header.length-1,0))}${lastRow+1}`;
+     if(category==="Subestaciones")ws["!cols"]=[{wch:30},{wch:42}];
+     else ws["!cols"]=[{wch:42}];
+     // Actualizar referencias de tablas de Excel para que incluyan todos los registros exportados.
+     if(Array.isArray(ws["!tables"]))ws["!tables"].forEach(t=>{if(t.ref)t.ref=`A3:${XLSX.utils.encode_col(header.length-1)}${lastRow+1}`;});
+   });
+   // Agregar la hoja de afectación de carga si la plantilla publicada aún no la incluye.
+   const stampName=`Catalogos_GRTVM_ZOTP_${stamp}.xlsx`;
+   try{
+     XLSX.writeFile(wb,stampName,{cellStyles:true});
+     $("catalogStatus").textContent="Exportación completada usando la estructura de la plantilla: conserva sus hojas, títulos, encabezados y formato disponible, con los catálogos actuales.";
+   }catch(writeErr){csvFallback();$("catalogStatus").textContent="No se pudo generar XLSX; se descargó un CSV compatible con Excel.";}
  }catch(err){$("catalogStatus").textContent="No se pudo exportar: "+err.message;alert("No se pudo exportar el Excel. "+err.message)}
 };
 $("clearData").onclick=()=>{if(confirm("¿Eliminar todos los datos de TODOS los catálogos de este dispositivo? Esta acción no se puede deshacer.")){catalogs={ "Equipos":[], "Protecciones":[], "Eventos / disparos":[], "Causas":[], "Subestaciones":[], "Condición operativa":[], "Afectación de carga":[] };selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"],afectacion:["Sin afectación"],condicion:["normales de operación"]};save();renderAll();renderCatalogList();$("catalogStatus").textContent="Todos los catálogos quedaron vacíos. Los valores predeterminados del formulario se conservan.";}};

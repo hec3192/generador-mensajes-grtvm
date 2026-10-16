@@ -230,10 +230,10 @@ footer{padding:18px;color:#78869a}
 <div class="field"><label>Evento / disparo</label><input id="searchEvento" placeholder="Escribe para buscar opciones"><div id="resultsEvento" class="results"></div><div id="tagsEvento" class="taglist"></div><small class="preset-hint">Valor predeterminado: Disparo</small></div>
 <div class="field"><label>Equipo(s)</label><input id="searchEquipo" placeholder="Escribe para buscar opciones"><div id="resultsEquipo" class="results"></div><div id="tagsEquipo" class="taglist"></div><div class="btnrow"><button class="small outline" id="clearEquipos">Limpiar todos</button></div></div>
 <div class="field"><label>Protecciones operadas</label><input id="searchProteccion" placeholder="Escribe para buscar opciones"><div id="resultsProteccion" class="results"></div><div id="tagsProteccion" class="taglist"></div></div>
-<div class="field"><label>Afectación de carga</label><input id="searchAfectacion" placeholder="Escribe para buscar opciones"><div id="resultsAfectacion" class="results"></div><div id="tagsAfectacion" class="taglist"></div><input id="afectacion" type="hidden" value="Sin afectación"></div>
+<div class="field"><label>Afectación de carga</label><input id="searchAfectacion" placeholder="Escribe para buscar opciones"><div id="resultsAfectacion" class="results"></div><div id="tagsAfectacion" class="taglist"></div><small class="preset-hint">Valor predeterminado: Sin afectación</small><input id="afectacion" type="hidden" value="Sin afectación"></div>
 <div class="field"><label>Carga afectada (MW)</label><input id="mw" type="number" min="0" step="0.1" placeholder="MW" disabled></div>
 <div class="field"><label>Causa del evento</label><input id="searchCausa" placeholder="Escribe para buscar opciones"><div id="resultsCausa" class="results"></div><div id="tagsCausa" class="taglist"></div><small class="preset-hint">Valor predeterminado: Se investiga</small></div>
-<div class="field"><label>Condición operativa</label><input id="searchCondicion" placeholder="Escribe para buscar opciones"><div id="resultsCondicion" class="results"></div><div id="tagsCondicion" class="taglist"></div><input id="condicion" type="hidden" value="normales de operación"></div>
+<div class="field"><label>Condición operativa</label><input id="searchCondicion" placeholder="Escribe para buscar opciones"><div id="resultsCondicion" class="results"></div><div id="tagsCondicion" class="taglist"></div><small class="preset-hint">Valor predeterminado: normales de operación</small><input id="condicion" type="hidden" value="normales de operación"></div>
 
 </div>
 <div class="btnrow"><button type="button" class="primary" id="generate">Generar mensajes</button><button type="button" class="outline" id="newEvent">Nuevo evento / limpiar</button><button type="button" class="primary" id="registerEvent">Registrar evento</button></div>
@@ -244,8 +244,8 @@ footer{padding:18px;color:#78869a}
 <div class="msgpanel"><h3>Mensaje completo GRTVM</h3><textarea id="msgGrtvm" placeholder="Aquí aparecerá el mensaje GRTVM"></textarea><div class="btnrow"><button class="whatsapp" data-msg="msgGrtvm">☏ WhatsApp</button><button class="outline" data-copy="msgGrtvm">Copiar mensaje</button></div></div>
 <div class="msgpanel"><h3>Mensaje ZOTP</h3><textarea id="msgZotp" placeholder="Aquí aparecerá el mensaje ZOTP"></textarea><div class="btnrow"><button class="whatsapp" data-msg="msgZotp">☏ WhatsApp</button><button class="outline" data-copy="msgZotp">Copiar mensaje</button></div></div>
 </section>
-<footer>Aplicación independiente · Datos almacenados localmente en este iPhone</footer>
+<footer>Aplicación independiente · Datos almacenados localmente en este dispositivo<br><strong>Créditos: Héctor Monroy Portillo</strong></footer>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" onerror="window.__xlsxLoadFailed=true"></script>
-<script src="app.js?v=44"></script>
+<script src="app.js?v=48"></script>
 </body></html>
