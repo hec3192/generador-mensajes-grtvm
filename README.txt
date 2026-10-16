@@ -45,3 +45,6 @@ Versión v39: se agregó el botón “Exportar datos a Excel”. Descarga un arc
 
 
 Versión v40: el botón Importar Excel incluye un icono verde alusivo a Microsoft Excel. Se agregó un acceso rápido a Historial junto a Catálogos en la parte superior y se retiró el botón duplicado del área inferior; ambos paneles mantienen su funcionamiento.
+
+
+Versión v41: corregida la detección de nombres de hojas para importar la plantilla oficial; descarga de plantilla con comprobación de existencia; mensajes claros si el archivo no está publicado o no contiene registros. Se conserva la exportación Excel y se aplican colores distintivos a Afectación de carga (violeta) y Condición operativa (turquesa).

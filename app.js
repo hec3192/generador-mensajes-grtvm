@@ -347,11 +347,18 @@ $("excelFile").onchange=async e=>{
        sheets[n]=arr;
      });
    }
-   const aliases={"Equipos":["Equipos","Equipo","Equipment"],"Protecciones":["Protecciones","Protecciones operadas"],"Eventos / disparos":["Eventos / disparos","Evento / disparo","Eventos","Eventos y disparos"],"Causas":["Causas","Causa del evento","Causa"],"Subestaciones":["Subestaciones","Subestación","Subestacion"],"Condición operativa":["Condición operativa","Condicion operativa","Condiciones operativas","Condición de operación","Condiciones de operación"]};
+   const aliases={
+     "Equipos":["equipos","equipo","equipment"],
+     "Protecciones":["protecciones","proteccion","protecciones operadas"],
+     "Eventos / disparos":["eventos","eventos / disparos","evento / disparo","eventos y disparos","evento","disparos"],
+     "Causas":["causas","causa del evento","causa"],
+     "Subestaciones":["subestaciones","subestacion"],
+     "Condición operativa":["condicion operativa","condiciones operativas","condicion de operacion","condiciones de operacion"]
+   };
    let imported=0, duplicates=0, recognized=0;
    const details=[];
    Object.entries(aliases).forEach(([cat,names])=>{
-     const key=Object.keys(sheets).find(n=>names.some(a=>norm(a)===norm(n)));
+     const key=Object.keys(sheets).find(n=>names.some(a=>a===norm(n)) && (sheets[n]||[]).length>0);
      if(!key)return;
      recognized++;
      const current=catalogs[cat]||[];
@@ -366,7 +373,7 @@ $("excelFile").onchange=async e=>{
      details.push(`${cat}: ${added} cargados, ${dup} repetidos`);
    });
    if(!recognized){
-     const first=Object.keys(sheets)[0];
+     const first=Object.keys(sheets).find(n=>(sheets[n]||[]).length>0);
      if(first){
        const current=catalogs.Equipos||[];
        const seen=new Set(current.map(x=>norm(String(x).trim())));
@@ -380,6 +387,7 @@ $("excelFile").onchange=async e=>{
        details.push(`Equipos: ${added} cargados, ${dup} repetidos`);
      }
    }
+   if(!recognized && imported===0)throw new Error("No se encontraron registros importables. Usa la plantilla oficial y escribe los datos debajo de los encabezados.");
    save();renderAll();renderCatalogList();
    const summary=`Importación terminada. Registros nuevos cargados: ${imported}. Repetidos omitidos: ${duplicates}.`;
    $("catalogStatus").textContent=summary+(details.length?" "+details.join(" · "):" No se reconocieron hojas de catálogo.");
@@ -388,11 +396,16 @@ $("excelFile").onchange=async e=>{
  e.target.value="";
 };
 $("templateBtn").onclick=()=>{
- const link=document.createElement("a");
- link.href="./Plantilla_Catalogos_GRTVM_ZOTP.xlsx";
- link.download="Plantilla_Catalogos_GRTVM_ZOTP.xlsx";
- document.body.appendChild(link);link.click();link.remove();
- $("catalogStatus").textContent="Descargando plantilla Excel profesional. Llena las pestañas y vuelve a importar el archivo.";
+ const url=new URL("Plantilla_Catalogos_GRTVM_ZOTP.xlsx",document.baseURI).href;
+ fetch(url,{cache:"no-store"}).then(response=>{
+   if(!response.ok)throw new Error("No se encontró la plantilla en GitHub Pages. Sube Plantilla_Catalogos_GRTVM_ZOTP.xlsx junto a index.html.");
+   return response.blob();
+ }).then(blob=>{
+   const objectUrl=URL.createObjectURL(blob);const link=document.createElement("a");
+   link.href=objectUrl;link.download="Plantilla_Catalogos_GRTVM_ZOTP.xlsx";
+   document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(objectUrl),1500);
+   $("catalogStatus").textContent="Plantilla Excel descargada. Llena las hojas y vuelve a importarla.";
+ }).catch(err=>{ $("catalogStatus").textContent=err.message;alert(err.message);});
 };
 
 $("exportCatalogs").onclick=()=>{
@@ -411,7 +424,7 @@ $("exportCatalogs").onclick=()=>{
      const values=(catalogs[category]||[]).map(value=>{
        const text=String(value??"").trim();
        if(category==="Subestaciones"){
-         const parts=text.split(/\\s*[|–-]\\s*/);
+         const parts=text.split(/\s*[|–-]\s*/);
          return [parts[0]||"",parts.slice(1).join(" - ")||""];
        }
        return [text];
