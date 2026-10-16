@@ -33,3 +33,6 @@ Versión v35: los elementos seleccionados se distinguen por color: Equipos azul,
 
 
 Versión v36: se corrigió la importación de la plantilla Excel. El importador ahora busca la fila real de encabezados y omite las filas de título e instrucciones como “Capture un registro por fila. No modifique los encabezados.”
+
+
+Versión v37: se limpian automáticamente de los catálogos guardados las instrucciones de plantilla y encabezados que se habían importado por error. La importación también excluye esos textos.

@@ -18,7 +18,31 @@ const configs=[
 ];
 function load(k,def){try{return JSON.parse(localStorage.getItem(k))||def}catch{return def}}
 function save(){localStorage.setItem("catalogs_v19",JSON.stringify(catalogs));localStorage.setItem("selected_v19",JSON.stringify(selected))}
-function norm(s){return String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim()}
+function norm(s){return String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\\s+/g," ").trim().toLowerCase()}
+function isTemplateInstruction(value){
+ const v=norm(value);
+ return !v || v.includes("capture un registro por fila") ||
+   v.includes("no modifique los encabezados") ||
+   v.startsWith("catalogo:") || v.startsWith("catálogo:");
+}
+function cleanCatalogs(){
+ const headers={
+   "Equipos":["equipo","equipos"],
+   "Protecciones":["proteccion","protecciones","protección"],
+   "Eventos / disparos":["evento","eventos","evento / disparo","eventos / disparos"],
+   "Causas":["causa","causas"],
+   "Subestaciones":["acronimo","acrónimo","descripcion","descripción","subestacion","subestación"],
+   "Condición operativa":["condicion operativa","condición operativa"]
+ };
+ let changed=false;
+ Object.keys(catalogs).forEach(cat=>{
+   const before=catalogs[cat]||[];
+   const after=before.filter(value=>!isTemplateInstruction(value) && !(headers[cat]||[]).includes(norm(value)));
+   if(after.length!==before.length){catalogs[cat]=after;changed=true;}
+ });
+ if(changed)save();
+}
+cleanCatalogs();
 function render(c){
  const q=norm($(c.input).value), list=(catalogs[c.catalog]||[]).filter(x=>!q||norm(x).includes(q)).filter(x=>!selected[c.key].includes(x));
  const box=$(c.results);box.innerHTML="";
@@ -314,7 +338,7 @@ $("excelFile").onchange=async e=>{
      const current=catalogs[cat]||[];
      const seen=new Set(current.map(x=>norm(String(x).trim())));
      let added=0, dup=0;
-     sheets[key].map(x=>String(x).trim()).filter(Boolean).forEach(value=>{
+     sheets[key].map(x=>String(x).trim()).filter(value=>Boolean(value)&&!isTemplateInstruction(value)&&!(["Equipos","Protecciones","Eventos / disparos","Causas","Subestaciones","Condición operativa"].includes(cat)&&( {"Equipos":["equipo","equipos"],"Protecciones":["proteccion","protecciones","protección"],"Eventos / disparos":["evento","eventos","evento / disparo","eventos / disparos"],"Causas":["causa","causas"],"Subestaciones":["acronimo","acrónimo","descripcion","descripción","subestacion","subestación"],"Condición operativa":["condicion operativa","condición operativa"]}[cat]||[]).includes(norm(value)))).forEach(value=>{
        const k=norm(value);
        if(seen.has(k)){dup++;duplicates++;}
        else{seen.add(k);current.push(value);added++;imported++;}
@@ -328,7 +352,7 @@ $("excelFile").onchange=async e=>{
        const current=catalogs.Equipos||[];
        const seen=new Set(current.map(x=>norm(String(x).trim())));
        let added=0, dup=0;
-       sheets[first].map(String).map(x=>x.trim()).filter(Boolean).forEach(value=>{
+       sheets[first].map(String).map(x=>x.trim()).filter(value=>Boolean(value)&&!isTemplateInstruction(value)&&!["equipo","equipos"].includes(norm(value))).forEach(value=>{
          const k=norm(value);
          if(seen.has(k)){dup++;duplicates++;}
          else{seen.add(k);current.push(value);added++;imported++;}
