@@ -210,6 +210,12 @@ footer{padding:18px;color:#78869a}
   <p class="hint">Aquí puedes revisar los registros guardados en este dispositivo. Usa × para eliminar un elemento del catálogo.</p>
 </div></div>
 </section>
+<section id="historyPanel" class="catalog-browser" hidden>
+  <div class="catalog-browser-head"><h3>Historial de eventos registrados</h3><span class="subtle" id="historyCount">0 eventos</span></div>
+  <div class="field"><label for="historySearch">Buscar en el historial</label><input id="historySearch" type="search" placeholder="Buscar por equipo, fecha, evento o causa"></div>
+  <div id="historyList" class="history-list"></div>
+  <p class="hint">Los registros se guardan localmente en este dispositivo. Usa Editar para cargar un evento, modificarlo y guardar los cambios.</p>
+</section>
 <section class="card">
 <h2>Datos del evento</h2>
 <div class="grid cols2">
@@ -233,12 +239,7 @@ footer{padding:18px;color:#78869a}
 </div>
 <div class="btnrow"><button type="button" class="primary" id="generate">Generar mensajes</button><button type="button" class="outline" id="newEvent">Nuevo evento / limpiar</button><button type="button" class="primary" id="registerEvent">Registrar evento</button></div>
 <div class="status" id="status"></div>
-<section id="historyPanel" class="catalog-browser" hidden>
-  <div class="catalog-browser-head"><h3>Historial de eventos registrados</h3><span class="subtle" id="historyCount">0 eventos</span></div>
-  <div class="field"><label for="historySearch">Buscar en el historial</label><input id="historySearch" type="search" placeholder="Buscar por equipo, fecha, evento o causa"></div>
-  <div id="historyList" class="history-list"></div>
-  <p class="hint">Los registros se guardan localmente en este dispositivo. Usa Editar para cargar un evento, modificarlo y guardar los cambios.</p>
-</section>
+
 </section>
 <section class="msggrid">
 <div class="msgpanel"><h3>Mensaje completo GRTVM</h3><textarea id="msgGrtvm" placeholder="Aquí aparecerá el mensaje GRTVM"></textarea><div class="btnrow"><button class="whatsapp" data-msg="msgGrtvm">☏ WhatsApp</button><button class="outline" data-copy="msgGrtvm">Copiar mensaje</button></div></div>
@@ -247,5 +248,5 @@ footer{padding:18px;color:#78869a}
 <footer>Aplicación independiente · Datos almacenados localmente en este iPhone</footer>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" onerror="window.__xlsxLoadFailed=true"></script>
-<script src="app.js?v=43"></script>
+<script src="app.js?v=44"></script>
 </body></html>
