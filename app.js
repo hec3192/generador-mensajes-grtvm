@@ -25,7 +25,9 @@ function render(c){
  if(!list.length){if(q){const d=document.createElement("div");d.className="subtle";d.textContent="No se encontraron opciones.";box.append(d)}}
  list.slice(0,80).forEach(item=>{const b=document.createElement("button");b.className="result";b.textContent="+  "+item;b.onclick=()=>{if(c.multi){selected[c.key].push(item)}else{selected[c.key]=[item]}$(c.input).value="";renderAll();save()};box.append(b)});
  const tags=$(c.tags);tags.innerHTML="";
- selected[c.key].forEach(item=>{const t=document.createElement("span");t.className="tag";const s=document.createElement("span");s.textContent=item;const b=document.createElement("button");b.type="button";b.setAttribute("aria-label","Quitar "+item);b.textContent="×";b.onclick=()=>{selected[c.key]=selected[c.key].filter(x=>x!==item);renderAll();save()};t.append(s,b);tags.append(t)});
+ selected[c.key].forEach(item=>{const t=document.createElement("span");t.className="tag";
+   const presetValues={evento:["Disparo"],causa:["Se investiga"]};
+   if((presetValues[c.key]||[]).some(v=>norm(v)===norm(item)))t.classList.add("preset-value");const s=document.createElement("span");s.textContent=item;const b=document.createElement("button");b.type="button";b.setAttribute("aria-label","Quitar "+item);b.textContent="×";b.onclick=()=>{selected[c.key]=selected[c.key].filter(x=>x!==item);renderAll();save()};t.append(s,b);tags.append(t)});
 }
 function renderCondiciones(){
  const select=$("condicion");
@@ -36,12 +38,14 @@ function renderCondiciones(){
  });
  if((catalogs["Condición operativa"]||[]).includes(current)) select.value=current;
  else if((catalogs["Condición operativa"]||[]).length) select.selectedIndex=0;
+ select.classList.toggle("preset-value",norm(select.value)==="normales de operacion");
 }
 function renderAll(){configs.forEach(render);renderCondiciones()}
 configs.forEach(c=>$(c.input).addEventListener("input",()=>render(c)));
 $("clearEquipos").onclick=()=>{selected.equipo=[];renderAll();save()};
 $("afectacion").onchange=()=>{$("mw").disabled=$("afectacion").value!=="Con afectación";if($("mw").disabled)$("mw").value=""};
 $("mw").disabled=true;
+$("condicion").addEventListener("change",()=>{$("condicion").classList.toggle("preset-value",norm($("condicion").value)==="normales de operacion")});
 
 function renderCatalogList(){
  const category=get("catalogType"), query=norm(get("catalogSearch"));
@@ -149,7 +153,7 @@ function generate(){
  $("msgGrtvm").value=grtvm;$("msgZotp").value=zotp;$("status").textContent="Mensajes generados con la estructura institucional. Verifica equipo, hora, protecciones, causa y afectación antes de distribuirlos.";
 }
 $("generate").onclick=generate;
-$("newEvent").onclick=()=>{editingHistoryId=null;$("registerEvent").textContent="Registrar evento";["fechaNorm","horaNorm","mw"].forEach(id=>$(id).value="");setTimePickerValue("horaEvento","00:00:00");setTimePickerValue("horaNorm","");
+
 // Historial local: registrar, consultar, editar y eliminar eventos.
 let historyItems=load("eventHistory_v23",[]);
 let editingHistoryId=null;
@@ -185,7 +189,7 @@ function renderHistory(){
   const meta=document.createElement("div");meta.className="history-item-meta";meta.textContent=summary.meta;text.append(title,meta);head.append(text);item.append(head);
   const actions=document.createElement("div");actions.className="history-item-actions";
   const edit=document.createElement("button");edit.className="primary";edit.textContent="Editar";edit.onclick=()=>loadHistoryRecord(r.id);
-  const view=document.createElement("button");view.className="outline";view.textContent="Ver mensajes";view.onclick=()=>{ $("msgGrtvm").value=r.msgGrtvm||"";$("msgZotp").value=r.msgZotp||"";$("status").textContent="Mensajes del historial cargados para consulta.";document.getElementById("msgGrtvm").scrollIntoView({behavior:"smooth",block:"center"}); };
+  const view=document.createElement("button");view.className="outline";view.textContent="Ver mensajes";view.onclick=()=>{$("msgGrtvm").value=r.msgGrtvm||"";$("msgZotp").value=r.msgZotp||"";$("status").textContent="Mensajes del historial cargados para consulta.";document.getElementById("msgGrtvm").scrollIntoView({behavior:"smooth",block:"center"});};
   const del=document.createElement("button");del.className="danger";del.textContent="Eliminar";del.onclick=()=>{if(!confirm("¿Eliminar este evento del historial?"))return;historyItems=historyItems.filter(x=>x.id!==r.id);saveHistory();renderHistory();};
   actions.append(edit,view,del);item.append(actions);list.append(item);
  });
@@ -193,8 +197,8 @@ function renderHistory(){
 function loadHistoryRecord(id){
  const r=historyItems.find(x=>x.id===id);if(!r)return;
  editingHistoryId=r.id;
- $("fechaEvento").value=r.fechaEvento||"";$("horaEvento").value=r.horaEvento||"00:00:00";setTimePickerValue("horaEvento",r.horaEvento||"00:00:00");
- $("fechaNorm").value=r.fechaNorm||"";$("horaNorm").value=r.horaNorm||"";setTimePickerValue("horaNorm",r.horaNorm||"");
+ $("fechaEvento").value=r.fechaEvento||"";setTimePickerValue("horaEvento",r.horaEvento||"00:00:00");
+ $("fechaNorm").value=r.fechaNorm||"";setTimePickerValue("horaNorm",r.horaNorm||"");
  $("afectacion").value=r.afectacion||"Sin afectación";$("mw").value=r.mw||"";$("afectacion").dispatchEvent(new Event("change"));
  $("condicion").value=r.condicion||"normales de operación";
  selected=JSON.parse(JSON.stringify(r.selected||{evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]}));
@@ -204,14 +208,28 @@ function loadHistoryRecord(id){
  $("historyPanel").hidden=true;$("toggleHistory").setAttribute("aria-expanded","false");
  document.getElementById("fechaEvento").scrollIntoView({behavior:"smooth",block:"start"});
 }
+$("newEvent").onclick=()=>{
+ editingHistoryId=null;
+ $("registerEvent").textContent="Registrar evento";
+ $("fechaEvento").value=new Date().toISOString().slice(0,10);
+ ["fechaNorm","mw"].forEach(id=>$(id).value="");
+ setTimePickerValue("horaEvento","00:00:00");setTimePickerValue("horaNorm","");
+ $("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));
+ $("condicion").value="normales de operación";
+ selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};
+ configs.forEach(c=>$(c.input).value="");renderAll();save();
+ $("msgGrtvm").value="";$("msgZotp").value="";
+ $("historyPanel").hidden=true;$("toggleHistory").textContent="Consultar / editar historial";$("toggleHistory").setAttribute("aria-expanded","false");
+ $("status").textContent="Formulario limpio. Puedes capturar un nuevo evento.";
+ document.getElementById("fechaEvento").scrollIntoView({behavior:"smooth",block:"start"});
+};
 $("registerEvent").onclick=()=>{
  if(!$("msgGrtvm").value.trim()||!$("msgZotp").value.trim())generate();
  if(!$("msgGrtvm").value.trim()||!$("msgZotp").value.trim())return;
  const record=currentRecord();
  if(editingHistoryId){
   const index=historyItems.findIndex(r=>r.id===editingHistoryId);
-  if(index>=0)historyItems[index]={...record,id:editingHistoryId};
-  else historyItems.unshift(record);
+  if(index>=0)historyItems[index]={...record,id:editingHistoryId};else historyItems.unshift(record);
   $("status").textContent="Cambios del evento guardados en el historial.";
  }else{
   historyItems.unshift(record);
@@ -227,7 +245,11 @@ $("toggleHistory").onclick=()=>{
 };
 $("historySearch").addEventListener("input",renderHistory);
 
-$("fechaEvento").value=new Date().toISOString().slice(0,10);$("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};configs.forEach(c=>$(c.input).value="");$("msgGrtvm").value="";$("msgZotp").value="";renderAll();save();$("status").textContent="Formulario limpio."};
+$("fechaEvento").value=new Date().toISOString().slice(0,10);
+$("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));
+selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};
+configs.forEach(c=>$(c.input).value="");$("msgGrtvm").value="";$("msgZotp").value="";
+renderAll();save();$("status").textContent="Listo para capturar un evento.";
 document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{const value=$(b.dataset.copy).value;if(!value)return;try{await navigator.clipboard.writeText(value);$("status").textContent="Mensaje copiado."}catch{$(b.dataset.copy).select();document.execCommand("copy");$("status").textContent="Mensaje copiado."}});
 document.querySelectorAll("[data-msg]").forEach(b=>b.onclick=async()=>{
  const value=$(b.dataset.msg).value;
@@ -258,113 +280,50 @@ $("excelFile").onchange=async e=>{
    if(file.name.toLowerCase().endsWith(".csv")){const txt=await file.text();sheets={"Equipos":txt.split(/\r?\n/).map(x=>x.split(",")[0]).filter(Boolean)}}
    else {if(!window.XLSX)throw new Error("No se pudo cargar el lector Excel. Conéctate a internet y vuelve a intentarlo.");const data=await file.arrayBuffer();const wb=XLSX.read(data,{type:"array"});sheets={};wb.SheetNames.forEach(n=>{const rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:""});const vals=rows.slice(1).map(r=>r.filter(v=>v!=="").map(String));const arr=vals.map(r=>r.length>1?`${r[0]} | ${r[1]}`:r[0]).filter(Boolean);sheets[n]=arr})}
    const aliases={"Equipos":["Equipos","Equipo","Equipment"],"Protecciones":["Protecciones","Protecciones operadas"],"Eventos / disparos":["Eventos / disparos","Evento / disparo","Eventos","Eventos y disparos"],"Causas":["Causas","Causa del evento","Causa"],"Subestaciones":["Subestaciones","Subestación","Subestacion"],"Condición operativa":["Condición operativa","Condicion operativa","Condiciones operativas","Condición de operación","Condiciones de operación"]};
-   let imported=0;
-   Object.entries(aliases).forEach(([cat,names])=>{const key=Object.keys(sheets).find(n=>names.some(a=>norm(a)===norm(n)));if(key){catalogs[cat]=[...new Map([...(catalogs[cat]||[]),...sheets[key].map(x=>String(x).trim()).filter(Boolean)].map(x=>[norm(x),x])).values()];imported+=sheets[key].length}});
-   if(!imported){const first=Object.keys(sheets)[0];if(first){catalogs.Equipos=[...new Map([...(catalogs.Equipos||[]),...sheets[first].map(String).filter(Boolean)].map(x=>[norm(x),x])).values()];imported=sheets[first].length}}
-   save();renderAll();renderCatalogList();$("catalogStatus").textContent=`Excel cargado. ${imported} registros importados. Los datos quedan guardados en este iPhone.`;
+   let imported=0, duplicates=0, recognized=0;
+   const details=[];
+   Object.entries(aliases).forEach(([cat,names])=>{
+     const key=Object.keys(sheets).find(n=>names.some(a=>norm(a)===norm(n)));
+     if(!key)return;
+     recognized++;
+     const current=catalogs[cat]||[];
+     const seen=new Set(current.map(x=>norm(String(x).trim())));
+     let added=0, dup=0;
+     sheets[key].map(x=>String(x).trim()).filter(Boolean).forEach(value=>{
+       const k=norm(value);
+       if(seen.has(k)){dup++;duplicates++;}
+       else{seen.add(k);current.push(value);added++;imported++;}
+     });
+     catalogs[cat]=current;
+     details.push(`${cat}: ${added} cargados, ${dup} repetidos`);
+   });
+   if(!recognized){
+     const first=Object.keys(sheets)[0];
+     if(first){
+       const current=catalogs.Equipos||[];
+       const seen=new Set(current.map(x=>norm(String(x).trim())));
+       let added=0, dup=0;
+       sheets[first].map(String).map(x=>x.trim()).filter(Boolean).forEach(value=>{
+         const k=norm(value);
+         if(seen.has(k)){dup++;duplicates++;}
+         else{seen.add(k);current.push(value);added++;imported++;}
+       });
+       catalogs.Equipos=current;
+       details.push(`Equipos: ${added} cargados, ${dup} repetidos`);
+     }
+   }
+   save();renderAll();renderCatalogList();
+   const summary=`Importación terminada. Registros nuevos cargados: ${imported}. Repetidos omitidos: ${duplicates}.`;
+   $("catalogStatus").textContent=summary+(details.length?" "+details.join(" · "):" No se reconocieron hojas de catálogo.");
+   alert(summary+(details.length?"\\n\\n"+details.join("\\n"):""));
  }catch(err){$("catalogStatus").textContent="No se pudo importar: "+err.message}
  e.target.value="";
 };
 $("templateBtn").onclick=()=>{
- try{
-  if(!window.XLSX){$("catalogStatus").textContent="No se pudo crear la plantilla Excel. Conéctate a internet y vuelve a intentarlo.";return}
-  const wb=XLSX.utils.book_new();
-  const sheets=[
-   ["Equipos",["Equipo"]],
-   ["Protecciones",["Protección"]],
-   ["Eventos",["Evento / disparo"]],
-   ["Causas",["Causa"]],
-   ["Subestaciones",["Acrónimo","Descripción"]],
-   ["Condición operativa",["Condición operativa"]]
-  ];
-  sheets.forEach(([name,headers])=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([headers, ...((name==="Condición operativa")?[["normales de operación"],["condiciones anormales de operación"]]:[])]),name));
-  XLSX.writeFile(wb,"Plantilla_Catalogos_GRTVM_ZOTP.xlsx");
-  $("catalogStatus").textContent="Plantilla Excel descargada. Llena las hojas y vuelve a importar el archivo.";
- }catch(err){$("catalogStatus").textContent="No se pudo descargar la plantilla: "+err.message}
+ const link=document.createElement("a");
+ link.href="./Plantilla_Catalogos_GRTVM_ZOTP.xlsx";
+ link.download="Plantilla_Catalogos_GRTVM_ZOTP.xlsx";
+ document.body.appendChild(link);link.click();link.remove();
+ $("catalogStatus").textContent="Descargando plantilla Excel profesional. Llena las pestañas y vuelve a importar el archivo.";
 };
 $("clearData").onclick=()=>{if(confirm("¿Eliminar todos los datos de TODOS los catálogos de este dispositivo? Esta acción no se puede deshacer.")){catalogs={ "Equipos":[], "Protecciones":[], "Eventos / disparos":[], "Causas":[], "Subestaciones":[], "Condición operativa":[] };selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};save();renderAll();renderCatalogList();$("catalogStatus").textContent="Todos los catálogos quedaron vacíos. Los valores predeterminados del formulario se conservan.";}};
-
-// Historial local: registrar, consultar, editar y eliminar eventos.
-let historyItems=load("eventHistory_v23",[]);
-let editingHistoryId=null;
-function saveHistory(){localStorage.setItem("eventHistory_v23",JSON.stringify(historyItems));}
-function currentRecord(){
- return {
-  id: editingHistoryId || ("evt-"+Date.now()+"-"+Math.random().toString(36).slice(2,7)),
-  updatedAt:new Date().toISOString(),
-  fechaEvento:get("fechaEvento"),horaEvento:get("horaEvento"),fechaNorm:get("fechaNorm"),horaNorm:get("horaNorm"),
-  afectacion:get("afectacion"),mw:get("mw"),condicion:get("condicion"),
-  selected:JSON.parse(JSON.stringify(selected)),
-  msgGrtvm:get("msgGrtvm"),msgZotp:get("msgZotp")
- };
-}
-function historySummary(r){
- const eq=(r.selected?.equipo||[]).join(", ")||"Sin equipo seleccionado";
- const ev=(r.selected?.evento||[])[0]||"Disparo";
- const cause=(r.selected?.causa||[])[0]||"Se investiga";
- return {title:`${ev} — ${eq}`,meta:`${fmtDate(r.fechaEvento)||"Sin fecha"} · Causa: ${cause} · ${r.afectacion||"Sin afectación"}`};
-}
-function renderHistory(){
- const query=norm(get("historySearch"));
- const list=$("historyList");list.innerHTML="";
- const filtered=[...historyItems].sort((a,b)=>(b.updatedAt||"").localeCompare(a.updatedAt||"")).filter(r=>{
-  const s=historySummary(r);return !query||norm([s.title,s.meta,r.msgGrtvm,r.msgZotp].join(" ")).includes(query);
- });
- $("historyCount").textContent=`${filtered.length} evento${filtered.length===1?"":"s"}${query?" encontrados":""}`;
- if(!filtered.length){const empty=document.createElement("div");empty.className="catalog-empty";empty.textContent=query?"No hay eventos que coincidan con la búsqueda.":"Todavía no hay eventos registrados.";list.append(empty);return;}
- filtered.forEach(r=>{
-  const item=document.createElement("article");item.className="history-item";
-  const head=document.createElement("div");head.className="history-item-head";
-  const text=document.createElement("div");const title=document.createElement("div");title.className="history-item-title";const summary=historySummary(r);title.textContent=summary.title;
-  const meta=document.createElement("div");meta.className="history-item-meta";meta.textContent=summary.meta;text.append(title,meta);head.append(text);item.append(head);
-  const actions=document.createElement("div");actions.className="history-item-actions";
-  const edit=document.createElement("button");edit.className="primary";edit.textContent="Editar";edit.onclick=()=>loadHistoryRecord(r.id);
-  const view=document.createElement("button");view.className="outline";view.textContent="Ver mensajes";view.onclick=()=>{ $("msgGrtvm").value=r.msgGrtvm||"";$("msgZotp").value=r.msgZotp||"";$("status").textContent="Mensajes del historial cargados para consulta.";document.getElementById("msgGrtvm").scrollIntoView({behavior:"smooth",block:"center"}); };
-  const del=document.createElement("button");del.className="danger";del.textContent="Eliminar";del.onclick=()=>{if(!confirm("¿Eliminar este evento del historial?"))return;historyItems=historyItems.filter(x=>x.id!==r.id);saveHistory();renderHistory();};
-  actions.append(edit,view,del);item.append(actions);list.append(item);
- });
-}
-function loadHistoryRecord(id){
- const r=historyItems.find(x=>x.id===id);if(!r)return;
- editingHistoryId=r.id;
- $("fechaEvento").value=r.fechaEvento||"";$("horaEvento").value=r.horaEvento||"00:00:00";setTimePickerValue("horaEvento",r.horaEvento||"00:00:00");
- $("fechaNorm").value=r.fechaNorm||"";$("horaNorm").value=r.horaNorm||"";setTimePickerValue("horaNorm",r.horaNorm||"");
- $("afectacion").value=r.afectacion||"Sin afectación";$("mw").value=r.mw||"";$("afectacion").dispatchEvent(new Event("change"));
- $("condicion").value=r.condicion||"normales de operación";
- selected=JSON.parse(JSON.stringify(r.selected||{evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]}));
- configs.forEach(c=>$(c.input).value="");renderAll();save();
- $("msgGrtvm").value=r.msgGrtvm||"";$("msgZotp").value=r.msgZotp||"";
- $("registerEvent").textContent="Guardar cambios";$("status").textContent="Evento cargado. Modifica los datos y pulsa «Guardar cambios».";
- $("historyPanel").hidden=true;$("toggleHistory").setAttribute("aria-expanded","false");
- document.getElementById("fechaEvento").scrollIntoView({behavior:"smooth",block:"start"});
-}
-$("registerEvent").onclick=()=>{
- if(!$("msgGrtvm").value.trim()||!$("msgZotp").value.trim())generate();
- if(!$("msgGrtvm").value.trim()||!$("msgZotp").value.trim())return;
- const record=currentRecord();
- if(editingHistoryId){
-  const index=historyItems.findIndex(r=>r.id===editingHistoryId);
-  if(index>=0)historyItems[index]={...record,id:editingHistoryId};
-  else historyItems.unshift(record);
-  $("status").textContent="Cambios del evento guardados en el historial.";
- }else{
-  historyItems.unshift(record);
-  $("status").textContent="Evento registrado correctamente en el historial.";
- }
- editingHistoryId=null;saveHistory();renderHistory();$("registerEvent").textContent="Registrar evento";
-};
-$("toggleHistory").onclick=()=>{
- const panel=$("historyPanel");panel.hidden=!panel.hidden;
- $("toggleHistory").textContent=panel.hidden?"Consultar / editar historial":"Ocultar historial";
- $("toggleHistory").setAttribute("aria-expanded",String(!panel.hidden));
- if(!panel.hidden)renderHistory();
-};
-$("historySearch").addEventListener("input",renderHistory);
-
-$("fechaEvento").value=new Date().toISOString().slice(0,10);
-renderAll();
-renderCatalogList();
-
-// El botón de catálogos usa un controlador inline independiente.
-
-if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));

@@ -23,7 +23,7 @@ Version 10: los campos de hora aceptan y muestran HH:mm:ss. Puedes escribir 14:0
 VERSION 11: fuerza una nueva caché y usa campos de texto para las horas (HH:mm:ss). Si el iPhone sigue mostrando el selector de rueda, está abriendo una copia antigua instalada. Elimina el acceso directo antiguo y los datos del sitio en Ajustes > Safari > Avanzado > Datos de sitios web, elimina el dominio github.io y vuelve a abrir la página en Safari antes de añadirla a inicio.
 
 
-ACTUALIZACIÓN v27 ANDROID: se agregó el botón Mostrar/Ocultar catálogos. La preferencia se guarda en el dispositivo y no elimina los catálogos. Para publicar, sustituye los archivos del repositorio de GitHub Pages por los de esta carpeta. En Android, abre la página publicada en Chrome y selecciona Instalar aplicación o Añadir a pantalla de inicio.
+ACTUALIZACIÓN v34 ANDROID: se agregó el botón Mostrar/Ocultar catálogos. La preferencia se guarda en el dispositivo y no elimina los catálogos. Para publicar, sustituye los archivos del repositorio de GitHub Pages por los de esta carpeta. En Android, abre la página publicada en Chrome y selecciona Instalar aplicación o Añadir a pantalla de inicio.
 
 
-Corrección v27: se fuerza display:none cuando la sección de catálogos está oculta y se renueva la caché de la PWA para que Android cargue los archivos corregidos.
+Corrección v34: se fuerza display:none cuando la sección de catálogos está oculta y se renueva la caché de la PWA para que Android cargue los archivos corregidos.
