@@ -48,3 +48,6 @@ Versión v40: el botón Importar Excel incluye un icono verde alusivo a Microsof
 
 
 Versión v41: corregida la detección de nombres de hojas para importar la plantilla oficial; descarga de plantilla con comprobación de existencia; mensajes claros si el archivo no está publicado o no contiene registros. Se conserva la exportación Excel y se aplican colores distintivos a Afectación de carga (violeta) y Condición operativa (turquesa).
+
+
+Versión v42: la descarga de plantilla usa enlace directo al archivo estático; la exportación genera CSV compatible con Excel como alternativa si la biblioteca XLSX no carga o falla; la importación CSV acepta archivos exportados por la aplicación. Se actualizó el parámetro de versión de app.js para evitar reutilizar scripts antiguos.
