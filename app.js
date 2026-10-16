@@ -80,7 +80,26 @@ function renderCatalogList(){
  $("catalogCount").textContent=`${items.length} elemento${items.length===1?"":"s"}${query?" encontrados":""}`;
  const box=$("catalogList");box.innerHTML="";
  if(!items.length){const empty=document.createElement("div");empty.className="catalog-empty";empty.textContent=query?"No hay elementos que coincidan con la búsqueda.":"Este catálogo todavía no tiene elementos.";box.append(empty);return;}
- items.forEach(item=>{const row=document.createElement("div");row.className="catalog-item";const label=document.createElement("span");label.textContent=item;const del=document.createElement("button");del.type="button";del.textContent="× Eliminar";del.title="Eliminar este elemento del catálogo";del.onclick=()=>{if(!confirm(`¿Eliminar "${item}" del catálogo ${category}?`))return;catalogs[category]=(catalogs[category]||[]).filter(x=>x!==item);configs.forEach(c=>{if(c.catalog===category)selected[c.key]=selected[c.key].filter(x=>x!==item)});save();renderAll();renderCatalogList();$("catalogStatus").textContent=`Elemento eliminado de ${category}.`;};row.append(label,del);box.append(row)});
+ items.forEach(item=>{
+   const row=document.createElement("div");row.className="catalog-item";
+   const label=document.createElement("span");label.className="catalog-item-label";label.textContent=item;
+   const actions=document.createElement("div");actions.className="catalog-item-actions";
+   const edit=document.createElement("button");edit.type="button";edit.className="catalog-edit";edit.textContent="✎ Modificar";edit.title="Modificar este elemento del catálogo";
+   edit.onclick=()=>{
+     const revised=prompt(`Modificar elemento de ${category}:`,item);
+     if(revised===null)return;
+     const value=revised.trim();
+     if(!value){alert("El elemento no puede quedar vacío.");return;}
+     const duplicate=(catalogs[category]||[]).some(x=>x!==item&&norm(x)===norm(value));
+     if(duplicate){alert("Ya existe otro elemento con ese nombre en este catálogo.");return;}
+     catalogs[category]=(catalogs[category]||[]).map(x=>x===item?value:x);
+     configs.forEach(c=>{if(c.catalog===category&&selected[c.key].includes(item))selected[c.key]=selected[c.key].map(x=>x===item?value:x)});
+     save();renderAll();renderCatalogList();$("catalogStatus").textContent=`Elemento modificado en ${category}.`;
+   };
+   const del=document.createElement("button");del.type="button";del.className="catalog-delete";del.textContent="× Eliminar";del.title="Eliminar este elemento del catálogo";
+   del.onclick=()=>{if(!confirm(`¿Eliminar "${item}" del catálogo ${category}?`))return;catalogs[category]=(catalogs[category]||[]).filter(x=>x!==item);configs.forEach(c=>{if(c.catalog===category)selected[c.key]=selected[c.key].filter(x=>x!==item)});save();renderAll();renderCatalogList();$("catalogStatus").textContent=`Elemento eliminado de ${category}.`;};
+   actions.append(edit,del);row.append(label,actions);box.append(row)
+ });
 }
 $("catalogType").addEventListener("change",renderCatalogList);
 $("catalogSearch").addEventListener("input",renderCatalogList);
@@ -374,5 +393,43 @@ $("templateBtn").onclick=()=>{
  link.download="Plantilla_Catalogos_GRTVM_ZOTP.xlsx";
  document.body.appendChild(link);link.click();link.remove();
  $("catalogStatus").textContent="Descargando plantilla Excel profesional. Llena las pestañas y vuelve a importar el archivo.";
+};
+
+$("exportCatalogs").onclick=()=>{
+ try{
+   if(!window.XLSX)throw new Error("No se pudo cargar el generador de Excel. Verifica tu conexión a internet y vuelve a intentarlo.");
+   const wb=XLSX.utils.book_new();
+   const exportMap=[
+     ["Equipos","Equipo"],
+     ["Protecciones","Protección"],
+     ["Eventos / disparos","Evento / disparo"],
+     ["Causas","Causa"],
+     ["Subestaciones","Acrónimo y descripción"],
+     ["Condición operativa","Condición operativa"]
+   ];
+   exportMap.forEach(([category,header])=>{
+     const values=(catalogs[category]||[]).map(value=>{
+       const text=String(value??"").trim();
+       if(category==="Subestaciones"){
+         const parts=text.split(/\\s*[|–-]\\s*/);
+         return [parts[0]||"",parts.slice(1).join(" - ")||""];
+       }
+       return [text];
+     }).filter(row=>row.some(cell=>String(cell).trim()!==""));
+     const rows=[[header],...values];
+     const ws=XLSX.utils.aoa_to_sheet(rows);
+     ws["!cols"]=category==="Subestaciones"?[{wch:20},{wch:42}]:[{wch:42}];
+     XLSX.utils.book_append_sheet(wb,ws,category==="Eventos / disparos"?"Eventos":category==="Condición operativa"?"Condicion operativa":category);
+   });
+   const instructions=XLSX.utils.aoa_to_sheet([
+     ["EXPORTACIÓN DE CATÁLOGOS | GRTVM – ZOTP"],
+     ["Datos guardados actualmente en este dispositivo."],
+     ["Puedes utilizar las hojas de catálogo como respaldo o volver a importarlas en la aplicación."]
+   ]);
+   XLSX.utils.book_append_sheet(wb,instructions,"Información");
+   const stamp=new Date().toISOString().slice(0,10);
+   XLSX.writeFile(wb,`Catalogos_GRTVM_ZOTP_${stamp}.xlsx`);
+   $("catalogStatus").textContent="Exportación completada. Se descargó un Excel con los catálogos guardados actualmente en este dispositivo.";
+ }catch(err){$("catalogStatus").textContent="No se pudo exportar: "+err.message;alert("No se pudo exportar el Excel. "+err.message)}
 };
 $("clearData").onclick=()=>{if(confirm("¿Eliminar todos los datos de TODOS los catálogos de este dispositivo? Esta acción no se puede deshacer.")){catalogs={ "Equipos":[], "Protecciones":[], "Eventos / disparos":[], "Causas":[], "Subestaciones":[], "Condición operativa":[] };selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};save();renderAll();renderCatalogList();$("catalogStatus").textContent="Todos los catálogos quedaron vacíos. Los valores predeterminados del formulario se conservan.";}};

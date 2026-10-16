@@ -36,3 +36,12 @@ Versión v36: se corrigió la importación de la plantilla Excel. El importador 
 
 
 Versión v37: se limpian automáticamente de los catálogos guardados las instrucciones de plantilla y encabezados que se habían importado por error. La importación también excluye esos textos.
+
+
+Versión v38: se agregó el botón Modificar junto a Eliminar en cada registro de los catálogos. La modificación valida que el valor no esté vacío ni duplicado y actualiza selecciones activas si corresponde.
+
+
+Versión v39: se agregó el botón “Exportar datos a Excel”. Descarga un archivo .xlsx con hojas separadas para equipos, protecciones, eventos, causas, subestaciones y condición operativa, usando los datos actualmente guardados en el dispositivo.
+
+
+Versión v40: el botón Importar Excel incluye un icono verde alusivo a Microsoft Excel. Se agregó un acceso rápido a Historial junto a Catálogos en la parte superior y se retiró el botón duplicado del área inferior; ambos paneles mantienen su funcionamiento.

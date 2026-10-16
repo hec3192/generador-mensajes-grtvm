@@ -151,6 +151,31 @@ footer{padding:18px;color:#78869a}
 .tag.selected-causa button{color:#6b21a8}
 .tag.selected-tag.preset-value{box-shadow:0 0 0 2px rgba(245,158,11,.17);font-weight:850}
 
+
+/* v38: acciones de modificar y eliminar en cada registro del catálogo */
+.catalog-item-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-shrink:0}
+.catalog-item .catalog-edit{background:#e8efff;border:1px solid #c7d7ff;color:#244b9b}
+.catalog-item .catalog-delete{background:#fff0f0;border:1px solid #ffd7da;color:#a31c2b}
+.catalog-item .catalog-edit,.catalog-item .catalog-delete{min-height:30px;padding:5px 9px;border-radius:8px;font-size:12px;white-space:nowrap}
+.catalog-item-label{flex:1;min-width:0}
+@media(max-width:480px){.catalog-item{align-items:flex-start}.catalog-item-actions{flex-direction:column;align-items:stretch}.catalog-item .catalog-edit,.catalog-item .catalog-delete{min-width:88px}}
+
+
+/* v39: botón para exportar los catálogos actuales */
+.export-catalogs{background:linear-gradient(135deg,#087f5b,#0f9f6e);color:#fff;border:1px solid #087f5b;box-shadow:0 4px 10px rgba(8,127,91,.15)}
+.export-catalogs:hover{filter:brightness(.96)}
+
+
+/* v40: acceso rápido a Historial junto a Catálogos e icono de Excel */
+.top-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:stretch}
+.top-tools .catalog-toggle{width:100%;height:100%}
+.history-top-button{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border:1px solid #cbd7e8;border-radius:14px;background:linear-gradient(145deg,#fff,#f2f7ff);color:#214574;font-weight:800;min-height:66px;white-space:nowrap}
+.history-top-button:hover{border-color:#9eb9f1;background:#edf4ff}
+.history-top-icon{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#e0eaff;color:#234d88;font-size:19px}
+.excel-icon{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;margin-right:4px;border-radius:4px;background:#16834a;color:white;font-size:12px;font-weight:900;box-shadow:inset -4px 0 #0b6338}
+.filelabel{gap:7px}
+@media(max-width:480px){.top-tools{grid-template-columns:minmax(0,1fr) auto;gap:7px}.history-top-button{padding:8px 10px;gap:5px;font-size:12px}.history-top-button .history-top-icon{width:26px;height:26px}.catalog-toggle{padding:10px}.catalog-toggle-copy small{font-size:10px}}
+
 </style>
 </head>
 <body>
@@ -158,12 +183,12 @@ footer{padding:18px;color:#78869a}
 <main>
 <section class="card">
 <h2>Catálogos</h2>
-<div class="btnrow" style="margin:0 0 10px"><button type="button" class="catalog-toggle" id="toggleCatalogs" aria-expanded="false" onclick="var c=document.getElementById('catalogContent');var h=!c.hidden;c.hidden=h;this.setAttribute('aria-expanded',String(!h));this.querySelector('.catalog-toggle-title').textContent=h?'Mostrar catálogos':'Ocultar catálogos';this.querySelector('.catalog-toggle-icon').textContent=h?'▾':'▴';this.classList.toggle('is-open',!h);try{localStorage.setItem('grtvm_catalogos_ocultos_v1',h?'1':'0')}catch(e){}"><span class="catalog-toggle-icon" aria-hidden="true">▾</span><span class="catalog-toggle-copy"><strong class="catalog-toggle-title">Mostrar catálogos</strong><small>Equipos · Protecciones · Eventos · Causas</small></span><span class="catalog-toggle-end" aria-hidden="true">⚙</span></button></div><div id="catalogContent" hidden><p class="subtle">Agrega equipos, protecciones, eventos, causas, subestaciones o condiciones operativas manualmente, o importa un Excel. Los cambios se guardan en este dispositivo.</p>
+<div class="top-tools" style="margin:0 0 10px"><button type="button" class="catalog-toggle" id="toggleCatalogs" aria-expanded="false" onclick="var c=document.getElementById('catalogContent');var h=!c.hidden;c.hidden=h;this.setAttribute('aria-expanded',String(!h));this.querySelector('.catalog-toggle-title').textContent=h?'Mostrar catálogos':'Ocultar catálogos';this.querySelector('.catalog-toggle-icon').textContent=h?'▾':'▴';this.classList.toggle('is-open',!h);try{localStorage.setItem('grtvm_catalogos_ocultos_v1',h?'1':'0')}catch(e){}"><span class="catalog-toggle-icon" aria-hidden="true">▾</span><span class="catalog-toggle-copy"><strong class="catalog-toggle-title">Mostrar catálogos</strong><small>Equipos · Protecciones · Eventos · Causas</small></span><span class="catalog-toggle-end" aria-hidden="true">⚙</span></button><button type="button" class="history-top-button" id="toggleHistoryTop" aria-expanded="false"><span class="history-top-icon">▤</span><span>Historial</span></button></div><div id="catalogContent" hidden><p class="subtle">Agrega equipos, protecciones, eventos, causas, subestaciones o condiciones operativas manualmente, o importa un Excel. Los cambios se guardan en este dispositivo.</p>
 <div class="grid cols2">
 <div class="field"><label for="catalogType">Catálogo que deseas modificar</label><select id="catalogType"><option>Equipos</option><option>Protecciones</option><option>Eventos / disparos</option><option>Causas</option><option>Subestaciones</option><option>Condición operativa</option></select></div>
 <div class="field"><label for="catalogEntry">Nuevo elemento</label><input id="catalogEntry" placeholder="Escribe el equipo o elemento"><p class="hint">Para subestaciones puedes usar AAN | ACTOPAN.</p></div>
 </div>
-<div class="btnrow"><button class="primary" id="addCatalogEntry">＋ Agregar al catálogo</button><label class="filelabel outline" for="excelFile">📊 Importar Excel</label><input id="excelFile" type="file" accept=".xlsx,.xls,.csv" hidden><button class="outline" id="templateBtn">Descargar plantilla Excel</button><button class="danger" id="clearData">Eliminar todos los datos de catálogos</button></div>
+<div class="btnrow"><button class="primary" id="addCatalogEntry">＋ Agregar al catálogo</button><label class="filelabel outline" for="excelFile"><span class="excel-icon" aria-hidden="true">X</span> Importar Excel</label><input id="excelFile" type="file" accept=".xlsx,.xls,.csv" hidden><button class="outline" id="templateBtn">Descargar plantilla Excel</button><button class="export-catalogs" id="exportCatalogs">⬇ Exportar datos a Excel</button><button class="danger" id="clearData">Eliminar todos los datos de catálogos</button></div>
 <div class="status" id="catalogStatus">Catálogos vacíos. Agrega elementos manualmente o importa un archivo Excel.</div>
 <div class="catalog-browser">
   <div class="catalog-browser-head"><h3>Datos actuales del catálogo</h3><span class="subtle" id="catalogCount">0 elementos</span></div>
@@ -196,7 +221,7 @@ footer{padding:18px;color:#78869a}
 <div class="field"><label>Condición operativa</label><select id="condicion"></select></div>
 
 </div>
-<div class="btnrow"><button type="button" class="primary" id="generate">Generar mensajes</button><button type="button" class="outline" id="newEvent">Nuevo evento / limpiar</button><button type="button" class="primary" id="registerEvent">Registrar evento</button><button type="button" class="outline" id="toggleHistory" aria-expanded="false">Consultar / editar historial</button></div>
+<div class="btnrow"><button type="button" class="primary" id="generate">Generar mensajes</button><button type="button" class="outline" id="newEvent">Nuevo evento / limpiar</button><button type="button" class="primary" id="registerEvent">Registrar evento</button></div>
 <div class="status" id="status"></div>
 <section id="historyPanel" class="catalog-browser" hidden>
   <div class="catalog-browser-head"><h3>Historial de eventos registrados</h3><span class="subtle" id="historyCount">0 eventos</span></div>
