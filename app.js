@@ -274,7 +274,19 @@ $("registerEvent").onclick=()=>{
   historyItems.unshift(record);
   $("status").textContent="Evento registrado correctamente en el historial.";
  }
- const savedMessage=$("status").textContent;editingHistoryId=null;saveHistory();renderHistory();$("registerEvent").textContent="Registrar evento";$("newEvent").click();$("status").textContent=savedMessage+" Formulario limpio y listo para el siguiente evento.";
+ const savedMessage=$("status").textContent;
+ editingHistoryId=null;
+ saveHistory();renderHistory();
+ $("registerEvent").textContent="Registrar evento";
+ // Limpiar explícitamente el formulario tras guardar, sin depender del botón oculto.
+ $("fechaEvento").value=new Date().toISOString().slice(0,10);
+ ["fechaNorm","mw"].forEach(id=>$(id).value="");
+ setTimePickerValue("horaEvento","00:00:00");setTimePickerValue("horaNorm","");
+ selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"],afectacion:["Sin afectación"],condicion:["normales de operación"]};
+ configs.forEach(c=>$(c.input).value="");renderAll();save();
+ $("msgGrtvm").value="";$("msgZotp").value="";
+ $("historyPanel").hidden=true;$("toggleHistoryTop").textContent="Consultar / editar historial";$("toggleHistoryTop").setAttribute("aria-expanded","false");
+ $("status").textContent=savedMessage+" Formulario limpio y listo para el siguiente evento.";
 };
 $("toggleHistoryTop").onclick=()=>{
  const panel=$("historyPanel");panel.hidden=!panel.hidden;
