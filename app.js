@@ -18,7 +18,7 @@ const configs=[
 ];
 function load(k,def){try{return JSON.parse(localStorage.getItem(k))||def}catch{return def}}
 function save(){localStorage.setItem("catalogs_v19",JSON.stringify(catalogs));localStorage.setItem("selected_v19",JSON.stringify(selected))}
-function norm(s){return String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\\s+/g," ").trim().toLowerCase()}
+function norm(s){return String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim().toLowerCase()}
 function isTemplateInstruction(value){
  const v=norm(value);
  return !v || v.includes("capture un registro por fila") ||
@@ -248,7 +248,7 @@ function loadHistoryRecord(id){
  configs.forEach(c=>$(c.input).value="");renderAll();save();
  $("msgGrtvm").value=r.msgGrtvm||"";$("msgZotp").value=r.msgZotp||"";
  $("registerEvent").textContent="Guardar cambios";$("status").textContent="Evento cargado. Modifica los datos y pulsa «Guardar cambios».";
- $("historyPanel").hidden=true;$("toggleHistory").setAttribute("aria-expanded","false");
+ $("historyPanel").hidden=true;$("toggleHistoryTop").setAttribute("aria-expanded","false");
  document.getElementById("fechaEvento").scrollIntoView({behavior:"smooth",block:"start"});
 }
 $("newEvent").onclick=()=>{
@@ -262,7 +262,7 @@ $("newEvent").onclick=()=>{
  selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};
  configs.forEach(c=>$(c.input).value="");renderAll();save();
  $("msgGrtvm").value="";$("msgZotp").value="";
- $("historyPanel").hidden=true;$("toggleHistory").textContent="Consultar / editar historial";$("toggleHistory").setAttribute("aria-expanded","false");
+ $("historyPanel").hidden=true;$("toggleHistoryTop").textContent="Consultar / editar historial";$("toggleHistoryTop").setAttribute("aria-expanded","false");
  $("status").textContent="Formulario limpio. Puedes capturar un nuevo evento.";
  document.getElementById("fechaEvento").scrollIntoView({behavior:"smooth",block:"start"});
 };
@@ -280,10 +280,10 @@ $("registerEvent").onclick=()=>{
  }
  editingHistoryId=null;saveHistory();renderHistory();$("registerEvent").textContent="Registrar evento";
 };
-$("toggleHistory").onclick=()=>{
+$("toggleHistoryTop").onclick=()=>{
  const panel=$("historyPanel");panel.hidden=!panel.hidden;
- $("toggleHistory").textContent=panel.hidden?"Consultar / editar historial":"Ocultar historial";
- $("toggleHistory").setAttribute("aria-expanded",String(!panel.hidden));
+ $("toggleHistoryTop").textContent=panel.hidden?"Consultar / editar historial":"Ocultar historial";
+ $("toggleHistoryTop").setAttribute("aria-expanded",String(!panel.hidden));
  if(!panel.hidden)renderHistory();
 };
 $("historySearch").addEventListener("input",renderHistory);
@@ -320,7 +320,30 @@ $("excelFile").onchange=async e=>{
  const file=e.target.files[0];if(!file)return;
  try{
    let sheets;
-   if(file.name.toLowerCase().endsWith(".csv")){const txt=await file.text();sheets={"Equipos":txt.split(/\r?\n/).map(x=>x.split(",")[0]).filter(Boolean)}}
+   if(file.name.toLowerCase().endsWith(".csv")){
+      const txt=await file.text();
+      const parseCSV=text=>{
+        const rows=[];let row=[],cell="",quoted=false;
+        for(let i=0;i<text.length;i++){
+          const ch=text[i];
+          if(ch==='"'&&quoted&&text[i+1]==='"'){cell+='"';i++;}
+          else if(ch==='"'){quoted=!quoted;}
+          else if(ch===","&&!quoted){row.push(cell);cell="";}
+          else if((ch==="\n"||ch==="\r")&&!quoted){if(ch==="\r"&&text[i+1]==="\n")i++;row.push(cell);rows.push(row);row=[];cell="";}
+          else cell+=ch;
+        }
+        if(cell.length||row.length){row.push(cell);rows.push(row);}
+        return rows;
+      };
+      const rows=parseCSV(txt.replace(/^\uFEFF/,""));
+      sheets={};
+      const map={"equipos":"Equipos","protecciones":"Protecciones","eventos / disparos":"Eventos / disparos","eventos":"Eventos / disparos","causas":"Causas","subestaciones":"Subestaciones","condición operativa":"Condición operativa","condicion operativa":"Condición operativa"};
+      if(rows.length&&norm(rows[0][0])==="catalogo"&&norm(rows[0][1])==="registro"){
+        rows.slice(1).forEach(r=>{const cat=map[norm(r[0])];if(cat&&r[1]){if(!sheets[cat])sheets[cat]=[];sheets[cat].push(r[1].trim());}});
+      }else{
+        sheets={"Equipos":rows.map(r=>String(r[0]||"").trim()).filter(Boolean)};
+      }
+    }
    else {
      if(!window.XLSX)throw new Error("No se pudo cargar el lector Excel. Conéctate a internet y vuelve a intentarlo.");
      const data=await file.arrayBuffer();const wb=XLSX.read(data,{type:"array"});sheets={};
@@ -391,7 +414,7 @@ $("excelFile").onchange=async e=>{
    save();renderAll();renderCatalogList();
    const summary=`Importación terminada. Registros nuevos cargados: ${imported}. Repetidos omitidos: ${duplicates}.`;
    $("catalogStatus").textContent=summary+(details.length?" "+details.join(" · "):" No se reconocieron hojas de catálogo.");
-   alert(summary+(details.length?"\\n\\n"+details.join("\\n"):""));
+   alert(summary+(details.length?"\n\n"+details.join("\n"):""));
  }catch(err){$("catalogStatus").textContent="No se pudo importar: "+err.message;alert("No se pudo importar el archivo. "+err.message)}
  e.target.value="";
 };
@@ -413,7 +436,7 @@ $("exportCatalogs").onclick=()=>{
      const quote=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
      const lines=["Catálogo,Registro"];
      exportMap.forEach(([category])=>(catalogs[category]||[]).forEach(value=>lines.push(quote(category)+","+quote(value))));
-     const blob=new Blob(["\\ufeff"+lines.join("\\r\\n")],{type:"text/csv;charset=utf-8;"});
+     const blob=new Blob(["\ufeff"+lines.join("\r\n")],{type:"text/csv;charset=utf-8;"});
      const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="Catalogos_GRTVM_ZOTP.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
      $("catalogStatus").textContent="La biblioteca XLSX no está disponible; se descargó un CSV compatible con Excel con los datos actuales.";
      return;
@@ -454,7 +477,7 @@ $("exportCatalogs").onclick=()=>{
    }catch(writeErr){
      const lines=["Catálogo,Registro"];
      exportMap.forEach(([category])=>(catalogs[category]||[]).forEach(value=>lines.push('"'+category.replace(/"/g,'""')+'","'+String(value??"").replace(/"/g,'""')+'"')));
-     const blob=new Blob(["\\ufeff"+lines.join("\\r\\n")],{type:"text/csv;charset=utf-8;"});
+     const blob=new Blob(["\ufeff"+lines.join("\r\n")],{type:"text/csv;charset=utf-8;"});
      const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`Catalogos_GRTVM_ZOTP_${stamp}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
      $("catalogStatus").textContent="No se pudo generar XLSX; se descargó un CSV compatible con Excel.";
    }
