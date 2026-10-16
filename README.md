@@ -1,3 +1,2 @@
 # generador-mensajes-grtvm
-Generador de Mensajes Operativos GRTVM y ZOTP
-Créditos Héctor Monroy Portillo
+Generador de Mensajes Operativos GRTVM y ZOTP para iPhone
