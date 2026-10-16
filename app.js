@@ -487,11 +487,31 @@ $("exportCatalogs").onclick=async()=>{
        }
        return [txt];
      }).filter(row=>row.some(cell=>String(cell).trim()!==""));
-     values.forEach((row,i)=>row.forEach((value,c)=>{const addr=XLSX.utils.encode_cell({r:i+3,c});const style=styleSamples.length?styleSamples[i%styleSamples.length][c]:null;ws[addr]=style?{t:"s",v:value,s:style}:{t:"s",v:value};}));
+     // Aplicar formato explícito para que los colores se conserven al escribir el archivo.
+     // Se usa xlsx-js-style porque SheetJS Community Edition no garantiza la escritura de estilos.
+     const titleStyle={font:{bold:true,color:{rgb:"FFFFFFFF"},sz:14},fill:{patternType:"solid",fgColor:{rgb:"FF17365D"}},alignment:{vertical:"center"}};
+     const noteStyle={font:{italic:true,color:{rgb:"FF667085"},sz:10},fill:{patternType:"solid",fgColor:{rgb:"FFF3F6FB"}},alignment:{vertical:"center",wrapText:true}};
+     const headerStyle={font:{bold:true,color:{rgb:"FFFFFFFF"}},fill:{patternType:"solid",fgColor:{rgb:"FF2F5597"}},alignment:{horizontal:"center",vertical:"center",wrapText:true},border:{bottom:{style:"medium",color:{rgb:"FF17365D"}},top:{style:"thin",color:{rgb:"FF17365D"}},left:{style:"thin",color:{rgb:"FFD9E2F3"}},right:{style:"thin",color:{rgb:"FFD9E2F3"}}}};
+     const dataBorder={top:{style:"thin",color:{rgb:"FFD9E2F3"}},bottom:{style:"thin",color:{rgb:"FFD9E2F3"}},left:{style:"thin",color:{rgb:"FFD9E2F3"}},right:{style:"thin",color:{rgb:"FFD9E2F3"}}};
+     for(let c=0;c<header.length;c++){
+       const titleAddr=XLSX.utils.encode_cell({r:0,c});
+       const noteAddr=XLSX.utils.encode_cell({r:1,c});
+       const headAddr=XLSX.utils.encode_cell({r:2,c});
+       if(!ws[titleAddr])ws[titleAddr]={t:"s",v:c===0?`CATÁLOGO: ${sheet.toUpperCase()}`:""};
+       if(!ws[noteAddr])ws[noteAddr]={t:"s",v:c===0?"Capture un registro por fila. No modifique los encabezados.":""};
+       ws[titleAddr].s=titleStyle;ws[noteAddr].s=noteStyle;
+       ws[headAddr]={t:"s",v:header[c],s:headerStyle};
+     }
+     values.forEach((row,i)=>row.forEach((value,c)=>{
+       const addr=XLSX.utils.encode_cell({r:i+3,c});
+       const baseFill=(i%2===0)?"FFF7FAFF":"FFFFFFFF";
+       ws[addr]={t:"s",v:value,s:{font:{color:{rgb:"FF344054"}},fill:{patternType:"solid",fgColor:{rgb:baseFill}},alignment:{vertical:"center",wrapText:true},border:dataBorder}};
+     }));
      const lastRow=Math.max(2,values.length+2);
      ws["!ref"]=`A1:${XLSX.utils.encode_col(Math.max(header.length-1,0))}${lastRow+1}`;
      if(category==="Subestaciones")ws["!cols"]=[{wch:30},{wch:42}];
      else ws["!cols"]=[{wch:42}];
+     ws["!rows"]=[{hpt:26},{hpt:30},{hpt:24},...values.map(()=>({hpt:21}))];
      // Actualizar referencias de tablas de Excel para que incluyan todos los registros exportados.
      if(Array.isArray(ws["!tables"]))ws["!tables"].forEach(t=>{if(t.ref)t.ref=`A3:${XLSX.utils.encode_col(header.length-1)}${lastRow+1}`;});
    });
@@ -499,7 +519,7 @@ $("exportCatalogs").onclick=async()=>{
    const stampName=`Catalogos_GRTVM_ZOTP_${stamp}.xlsx`;
    try{
      XLSX.writeFile(wb,stampName,{cellStyles:true});
-     $("catalogStatus").textContent="Exportación completada usando la estructura de la plantilla: conserva sus hojas, títulos, encabezados y formato disponible, con los catálogos actuales.";
+     $("catalogStatus").textContent="Exportación completada con colores, encabezados azules, títulos oscuros y filas alternadas, usando la estructura de la plantilla.";
    }catch(writeErr){csvFallback();$("catalogStatus").textContent="No se pudo generar XLSX; se descargó un CSV compatible con Excel.";}
  }catch(err){$("catalogStatus").textContent="No se pudo exportar: "+err.message;alert("No se pudo exportar el Excel. "+err.message)}
 };
