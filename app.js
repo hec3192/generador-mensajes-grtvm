@@ -274,7 +274,7 @@ $("registerEvent").onclick=()=>{
   historyItems.unshift(record);
   $("status").textContent="Evento registrado correctamente en el historial.";
  }
- editingHistoryId=null;saveHistory();renderHistory();$("registerEvent").textContent="Registrar evento";
+ const savedMessage=$("status").textContent;editingHistoryId=null;saveHistory();renderHistory();$("registerEvent").textContent="Registrar evento";$("newEvent").click();$("status").textContent=savedMessage+" Formulario limpio y listo para el siguiente evento.";
 };
 $("toggleHistoryTop").onclick=()=>{
  const panel=$("historyPanel");panel.hidden=!panel.hidden;
