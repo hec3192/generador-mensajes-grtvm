@@ -5,16 +5,22 @@ const defaultCatalogs={
  "Eventos / disparos":[],
  "Causas":[],
  "Subestaciones":[],
- "Condición operativa":["normales de operación","condiciones anormales de operación"]
+ "Condición operativa":["normales de operación","condiciones anormales de operación"],
+ "Afectación de carga":["Sin afectación","Con afectación"]
 };
 // Al usar claves nuevas, la app inicia vacía aunque el navegador conserve datos de versiones anteriores.
 let catalogs=load("catalogs_v19",defaultCatalogs);
-let selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};
+Object.keys(defaultCatalogs).forEach(k=>{if(!Array.isArray(catalogs[k]))catalogs[k]=[...(defaultCatalogs[k]||[])];});
+if(!catalogs["Afectación de carga"].length)catalogs["Afectación de carga"]=["Sin afectación","Con afectación"];
+if(!catalogs["Condición operativa"].length)catalogs["Condición operativa"]=["normales de operación","condiciones anormales de operación"];
+let selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"],afectacion:["Sin afectación"],condicion:["normales de operación"]};
 const configs=[
  {key:"evento",input:"searchEvento",results:"resultsEvento",tags:"tagsEvento",catalog:"Eventos / disparos",multi:false},
  {key:"equipo",input:"searchEquipo",results:"resultsEquipo",tags:"tagsEquipo",catalog:"Equipos",multi:true},
  {key:"proteccion",input:"searchProteccion",results:"resultsProteccion",tags:"tagsProteccion",catalog:"Protecciones",multi:true},
- {key:"causa",input:"searchCausa",results:"resultsCausa",tags:"tagsCausa",catalog:"Causas",multi:false}
+ {key:"causa",input:"searchCausa",results:"resultsCausa",tags:"tagsCausa",catalog:"Causas",multi:false},
+ {key:"afectacion",input:"searchAfectacion",results:"resultsAfectacion",tags:"tagsAfectacion",catalog:"Afectación de carga",multi:false},
+ {key:"condicion",input:"searchCondicion",results:"resultsCondicion",tags:"tagsCondicion",catalog:"Condición operativa",multi:false}
 ];
 function load(k,def){try{return JSON.parse(localStorage.getItem(k))||def}catch{return def}}
 function save(){localStorage.setItem("catalogs_v19",JSON.stringify(catalogs));localStorage.setItem("selected_v19",JSON.stringify(selected))}
@@ -32,7 +38,8 @@ function cleanCatalogs(){
    "Eventos / disparos":["evento","eventos","evento / disparo","eventos / disparos"],
    "Causas":["causa","causas"],
    "Subestaciones":["acronimo","acrónimo","descripcion","descripción","subestacion","subestación"],
-   "Condición operativa":["condicion operativa","condición operativa"]
+   "Condición operativa":["condicion operativa","condición operativa"],
+   "Afectación de carga":["afectacion de carga","afectación de carga"]
  };
  let changed=false;
  Object.keys(catalogs).forEach(cat=>{
@@ -50,24 +57,15 @@ function render(c){
  list.slice(0,80).forEach(item=>{const b=document.createElement("button");b.className="result";b.textContent="+  "+item;b.onclick=()=>{if(c.multi){selected[c.key].push(item)}else{selected[c.key]=[item]}$(c.input).value="";renderAll();save()};box.append(b)});
  const tags=$(c.tags);tags.innerHTML="";
  selected[c.key].forEach(item=>{const t=document.createElement("span");t.className="tag selected-tag selected-"+c.key;
-   const presetValues={evento:["Disparo"],causa:["Se investiga"]};
+   const presetValues={evento:["Disparo"],causa:["Se investiga"],afectacion:["Sin afectación"],condicion:["normales de operación"]};
    if((presetValues[c.key]||[]).some(v=>norm(v)===norm(item)))t.classList.add("preset-value");const s=document.createElement("span");s.textContent=item;const b=document.createElement("button");b.type="button";b.setAttribute("aria-label","Quitar "+item);b.textContent="×";b.onclick=()=>{selected[c.key]=selected[c.key].filter(x=>x!==item);renderAll();save()};t.append(s,b);tags.append(t)});
+ if(c.key==="afectacion"||c.key==="condicion"){const hidden=$(c.key);hidden.value=selected[c.key][0]||"";hidden.classList.toggle("preset-value",(selected[c.key][0]||"")=== (c.key==="afectacion"?"Sin afectación":"normales de operación"));}
+ if(c.key==="afectacion"){$("mw").disabled=selected.afectacion[0]!=="Con afectación";if($("mw").disabled)$("mw").value="";}
 }
-function renderCondiciones(){
- const select=$("condicion");
- const current=select.value || "normales de operación";
- select.innerHTML="";
- (catalogs["Condición operativa"]||[]).forEach(item=>{
-   const opt=document.createElement("option"); opt.value=item; opt.textContent=item; select.append(opt);
- });
- if((catalogs["Condición operativa"]||[]).includes(current)) select.value=current;
- else if((catalogs["Condición operativa"]||[]).length) select.selectedIndex=0;
- select.classList.toggle("preset-value",norm(select.value)==="normales de operacion");
-}
+function renderCondiciones(){}
 function renderAll(){configs.forEach(render);renderCondiciones()}
 configs.forEach(c=>$(c.input).addEventListener("input",()=>render(c)));
 $("clearEquipos").onclick=()=>{selected.equipo=[];renderAll();save()};
-$("afectacion").onchange=()=>{$("mw").disabled=$("afectacion").value!=="Con afectación";if($("mw").disabled)$("mw").value=""};
 $("mw").disabled=true;
 $("condicion").addEventListener("change",()=>{$("condicion").classList.toggle("preset-value",norm($("condicion").value)==="normales de operacion")});
 
@@ -242,9 +240,9 @@ function loadHistoryRecord(id){
  editingHistoryId=r.id;
  $("fechaEvento").value=r.fechaEvento||"";setTimePickerValue("horaEvento",r.horaEvento||"00:00:00");
  $("fechaNorm").value=r.fechaNorm||"";setTimePickerValue("horaNorm",r.horaNorm||"");
- $("afectacion").value=r.afectacion||"Sin afectación";$("mw").value=r.mw||"";$("afectacion").dispatchEvent(new Event("change"));
- $("condicion").value=r.condicion||"normales de operación";
- selected=JSON.parse(JSON.stringify(r.selected||{evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]}));
+ $("mw").value=r.mw||"";
+ selected=JSON.parse(JSON.stringify(r.selected||{evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"],afectacion:[r.afectacion||"Sin afectación"],condicion:[r.condicion||"normales de operación"]}));
+ selected.afectacion=selected.afectacion||[r.afectacion||"Sin afectación"];selected.condicion=selected.condicion||[r.condicion||"normales de operación"];
  configs.forEach(c=>$(c.input).value="");renderAll();save();
  $("msgGrtvm").value=r.msgGrtvm||"";$("msgZotp").value=r.msgZotp||"";
  $("registerEvent").textContent="Guardar cambios";$("status").textContent="Evento cargado. Modifica los datos y pulsa «Guardar cambios».";
@@ -257,9 +255,7 @@ $("newEvent").onclick=()=>{
  $("fechaEvento").value=new Date().toISOString().slice(0,10);
  ["fechaNorm","mw"].forEach(id=>$(id).value="");
  setTimePickerValue("horaEvento","00:00:00");setTimePickerValue("horaNorm","");
- $("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));
- $("condicion").value="normales de operación";
- selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};
+ selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"],afectacion:["Sin afectación"],condicion:["normales de operación"]};
  configs.forEach(c=>$(c.input).value="");renderAll();save();
  $("msgGrtvm").value="";$("msgZotp").value="";
  $("historyPanel").hidden=true;$("toggleHistoryTop").textContent="Consultar / editar historial";$("toggleHistoryTop").setAttribute("aria-expanded","false");
@@ -289,8 +285,7 @@ $("toggleHistoryTop").onclick=()=>{
 $("historySearch").addEventListener("input",renderHistory);
 
 $("fechaEvento").value=new Date().toISOString().slice(0,10);
-$("afectacion").value="Sin afectación";$("afectacion").dispatchEvent(new Event("change"));
-selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};
+selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"],afectacion:["Sin afectación"],condicion:["normales de operación"]};
 configs.forEach(c=>$(c.input).value="");$("msgGrtvm").value="";$("msgZotp").value="";
 renderAll();save();$("status").textContent="Listo para capturar un evento.";
 document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{const value=$(b.dataset.copy).value;if(!value)return;try{await navigator.clipboard.writeText(value);$("status").textContent="Mensaje copiado."}catch{$(b.dataset.copy).select();document.execCommand("copy");$("status").textContent="Mensaje copiado."}});
@@ -337,7 +332,7 @@ $("excelFile").onchange=async e=>{
       };
       const rows=parseCSV(txt.replace(/^\uFEFF/,""));
       sheets={};
-      const map={"equipos":"Equipos","protecciones":"Protecciones","eventos / disparos":"Eventos / disparos","eventos":"Eventos / disparos","causas":"Causas","subestaciones":"Subestaciones","condición operativa":"Condición operativa","condicion operativa":"Condición operativa"};
+      const map={"equipos":"Equipos","protecciones":"Protecciones","eventos / disparos":"Eventos / disparos","eventos":"Eventos / disparos","causas":"Causas","subestaciones":"Subestaciones","condición operativa":"Condición operativa","condicion operativa":"Condición operativa","afectación de carga":"Afectación de carga","afectacion de carga":"Afectación de carga"};
       if(rows.length&&norm(rows[0][0])==="catalogo"&&norm(rows[0][1])==="registro"){
         rows.slice(1).forEach(r=>{const cat=map[norm(r[0])];if(cat&&r[1]){if(!sheets[cat])sheets[cat]=[];sheets[cat].push(r[1].trim());}});
       }else{
@@ -347,7 +342,7 @@ $("excelFile").onchange=async e=>{
    else {
      if(!window.XLSX)throw new Error("No se pudo cargar el lector Excel. Conéctate a internet y vuelve a intentarlo.");
      const data=await file.arrayBuffer();const wb=XLSX.read(data,{type:"array"});sheets={};
-     const headerNames=["equipo","proteccion","protección","evento / disparo","evento","causa","acronimo","acrónimo","descripcion","descripción","condicion operativa","condición operativa"];
+     const headerNames=["equipo","proteccion","protección","evento / disparo","evento","causa","acronimo","acrónimo","descripcion","descripción","condicion operativa","condición operativa","afectacion de carga","afectación de carga"];
      wb.SheetNames.forEach(n=>{
        const rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:""});
        // La plantilla tiene título y una instrucción antes de los encabezados.
@@ -376,7 +371,8 @@ $("excelFile").onchange=async e=>{
      "Eventos / disparos":["eventos","eventos / disparos","evento / disparo","eventos y disparos","evento","disparos"],
      "Causas":["causas","causa del evento","causa"],
      "Subestaciones":["subestaciones","subestacion"],
-     "Condición operativa":["condicion operativa","condiciones operativas","condicion de operacion","condiciones de operacion"]
+     "Condición operativa":["condicion operativa","condiciones operativas","condicion de operacion","condiciones de operacion"],
+     "Afectación de carga":["afectación de carga","afectacion de carga"]
    };
    let imported=0, duplicates=0, recognized=0;
    const details=[];
@@ -387,7 +383,8 @@ $("excelFile").onchange=async e=>{
      const current=catalogs[cat]||[];
      const seen=new Set(current.map(x=>norm(String(x).trim())));
      let added=0, dup=0;
-     sheets[key].map(x=>String(x).trim()).filter(value=>Boolean(value)&&!isTemplateInstruction(value)&&!(["Equipos","Protecciones","Eventos / disparos","Causas","Subestaciones","Condición operativa"].includes(cat)&&( {"Equipos":["equipo","equipos"],"Protecciones":["proteccion","protecciones","protección"],"Eventos / disparos":["evento","eventos","evento / disparo","eventos / disparos"],"Causas":["causa","causas"],"Subestaciones":["acronimo","acrónimo","descripcion","descripción","subestacion","subestación"],"Condición operativa":["condicion operativa","condición operativa"]}[cat]||[]).includes(norm(value)))).forEach(value=>{
+     sheets[key].map(x=>String(x).trim()).filter(value=>Boolean(value)&&!isTemplateInstruction(value)&&!(["Equipos","Protecciones","Eventos / disparos","Causas","Subestaciones","Condición operativa"].includes(cat)&&( {"Equipos":["equipo","equipos"],"Protecciones":["proteccion","protecciones","protección"],"Eventos / disparos":["evento","eventos","evento / disparo","eventos / disparos"],"Causas":["causa","causas"],"Subestaciones":["acronimo","acrónimo","descripcion","descripción","subestacion","subestación"],"Condición operativa":["condicion operativa","condición operativa"],
+   "Afectación de carga":["afectacion de carga","afectación de carga"]}[cat]||[]).includes(norm(value)))).forEach(value=>{
        const k=norm(value);
        if(seen.has(k)){dup++;duplicates++;}
        else{seen.add(k);current.push(value);added++;imported++;}
@@ -432,7 +429,7 @@ $("templateBtn").onclick=()=>{
 $("exportCatalogs").onclick=()=>{
  try{
    if(!window.XLSX){
-     const exportMap=[["Equipos","Equipo"],["Protecciones","Protección"],["Eventos / disparos","Evento / disparo"],["Causas","Causa"],["Subestaciones","Acrónimo,Descripción"],["Condición operativa","Condición operativa"]];
+     const exportMap=[["Equipos","Equipo"],["Protecciones","Protección"],["Eventos / disparos","Evento / disparo"],["Causas","Causa"],["Subestaciones","Acrónimo,Descripción"],["Condición operativa","Condición operativa"],["Afectación de carga","Afectación de carga"]];
      const quote=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
      const lines=["Catálogo,Registro"];
      exportMap.forEach(([category])=>(catalogs[category]||[]).forEach(value=>lines.push(quote(category)+","+quote(value))));
@@ -448,7 +445,8 @@ $("exportCatalogs").onclick=()=>{
      ["Eventos / disparos","Evento / disparo"],
      ["Causas","Causa"],
      ["Subestaciones","Acrónimo y descripción"],
-     ["Condición operativa","Condición operativa"]
+     ["Condición operativa","Condición operativa"],
+    ["Afectación de carga","Afectación de carga"]
    ];
    exportMap.forEach(([category,header])=>{
      const values=(catalogs[category]||[]).map(value=>{
@@ -483,4 +481,4 @@ $("exportCatalogs").onclick=()=>{
    }
  }catch(err){$("catalogStatus").textContent="No se pudo exportar: "+err.message;alert("No se pudo exportar el Excel. "+err.message)}
 };
-$("clearData").onclick=()=>{if(confirm("¿Eliminar todos los datos de TODOS los catálogos de este dispositivo? Esta acción no se puede deshacer.")){catalogs={ "Equipos":[], "Protecciones":[], "Eventos / disparos":[], "Causas":[], "Subestaciones":[], "Condición operativa":[] };selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"]};save();renderAll();renderCatalogList();$("catalogStatus").textContent="Todos los catálogos quedaron vacíos. Los valores predeterminados del formulario se conservan.";}};
+$("clearData").onclick=()=>{if(confirm("¿Eliminar todos los datos de TODOS los catálogos de este dispositivo? Esta acción no se puede deshacer.")){catalogs={ "Equipos":[], "Protecciones":[], "Eventos / disparos":[], "Causas":[], "Subestaciones":[], "Condición operativa":[], "Afectación de carga":[] };selected={evento:["Disparo"],equipo:[],proteccion:[],causa:["Se investiga"],afectacion:["Sin afectación"],condicion:["normales de operación"]};save();renderAll();renderCatalogList();$("catalogStatus").textContent="Todos los catálogos quedaron vacíos. Los valores predeterminados del formulario se conservan.";}};

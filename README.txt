@@ -51,3 +51,6 @@ Versión v41: corregida la detección de nombres de hojas para importar la plant
 
 
 Versión v42: la descarga de plantilla usa enlace directo al archivo estático; la exportación genera CSV compatible con Excel como alternativa si la biblioteca XLSX no carga o falla; la importación CSV acepta archivos exportados por la aplicación. Se actualizó el parámetro de versión de app.js para evitar reutilizar scripts antiguos.
+
+
+Versión 45: Afectación de carga y Condición operativa ahora usan búsqueda y etiquetas seleccionables como Causa del evento. Ambos catálogos se pueden administrar desde Catálogos.

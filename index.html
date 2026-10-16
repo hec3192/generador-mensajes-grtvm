@@ -149,6 +149,10 @@ footer{padding:18px;color:#78869a}
 .tag.selected-proteccion button{color:#166534}
 .tag.selected-causa{background:#f3e8ff;border-color:#c084fc;color:#6b21a8}
 .tag.selected-causa button{color:#6b21a8}
+.tag.selected-afectacion{background:#e9e7ff;border-color:#aaa4ff;color:#4338a8}
+.tag.selected-afectacion button{color:#4338a8}
+.tag.selected-condicion{background:#dff7f5;border-color:#63c8c0;color:#115e59}
+.tag.selected-condicion button{color:#115e59}
 .tag.selected-tag.preset-value{box-shadow:0 0 0 2px rgba(245,158,11,.17);font-weight:850}
 
 
@@ -178,12 +182,7 @@ footer{padding:18px;color:#78869a}
 
 
 /* v41: campos de selección con estado visual y color propio */
-#afectacion{background:#e9e7ff;border-color:#aaa4ff;color:#4338a8;font-weight:700}
-#afectacion:focus{background:#f5f3ff;border-color:#7c73ff;box-shadow:0 0 0 3px rgba(124,115,255,.15)}
-#afectacion option{background:#fff;color:#312e81}
-#condicion{background:#dff7f5;border-color:#63c8c0;color:#115e59;font-weight:700}
-#condicion:focus{background:#f0fdfa;border-color:#14b8a6;box-shadow:0 0 0 3px rgba(20,184,166,.15)}
-#condicion option{background:#fff;color:#134e4a}
+
 #mw:disabled{background:#f3c2c8;border-color:#e8aeb7;color:#7c1d2a;opacity:1}
 
 </style>
@@ -195,7 +194,7 @@ footer{padding:18px;color:#78869a}
 <h2>Catálogos</h2>
 <div class="top-tools" style="margin:0 0 10px"><button type="button" class="catalog-toggle" id="toggleCatalogs" aria-expanded="false" onclick="var c=document.getElementById('catalogContent');var h=!c.hidden;c.hidden=h;this.setAttribute('aria-expanded',String(!h));this.querySelector('.catalog-toggle-title').textContent=h?'Mostrar catálogos':'Ocultar catálogos';this.querySelector('.catalog-toggle-icon').textContent=h?'▾':'▴';this.classList.toggle('is-open',!h);try{localStorage.setItem('grtvm_catalogos_ocultos_v1',h?'1':'0')}catch(e){}"><span class="catalog-toggle-icon" aria-hidden="true">▾</span><span class="catalog-toggle-copy"><strong class="catalog-toggle-title">Mostrar catálogos</strong><small>Equipos · Protecciones · Eventos · Causas</small></span><span class="catalog-toggle-end" aria-hidden="true">⚙</span></button><button type="button" class="history-top-button" id="toggleHistoryTop" aria-expanded="false"><span class="history-top-icon">▤</span><span>Historial</span></button></div><div id="catalogContent" hidden><p class="subtle">Agrega equipos, protecciones, eventos, causas, subestaciones o condiciones operativas manualmente, o importa un Excel. Los cambios se guardan en este dispositivo.</p>
 <div class="grid cols2">
-<div class="field"><label for="catalogType">Catálogo que deseas modificar</label><select id="catalogType"><option>Equipos</option><option>Protecciones</option><option>Eventos / disparos</option><option>Causas</option><option>Subestaciones</option><option>Condición operativa</option></select></div>
+<div class="field"><label for="catalogType">Catálogo que deseas modificar</label><select id="catalogType"><option>Equipos</option><option>Protecciones</option><option>Eventos / disparos</option><option>Causas</option><option>Subestaciones</option><option>Condición operativa</option><option>Afectación de carga</option></select></div>
 <div class="field"><label for="catalogEntry">Nuevo elemento</label><input id="catalogEntry" placeholder="Escribe el equipo o elemento"><p class="hint">Para subestaciones puedes usar AAN | ACTOPAN.</p></div>
 </div>
 <div class="btnrow"><button class="primary" id="addCatalogEntry">＋ Agregar al catálogo</button><label class="filelabel outline" for="excelFile"><span class="excel-icon" aria-hidden="true">X</span> Importar Excel</label><input id="excelFile" type="file" accept=".xlsx,.xls,.csv" hidden><button class="outline" id="templateBtn">Descargar plantilla Excel</button><button class="export-catalogs" id="exportCatalogs">⬇ Exportar datos a Excel</button><button class="danger" id="clearData">Eliminar todos los datos de catálogos</button></div>
@@ -231,10 +230,10 @@ footer{padding:18px;color:#78869a}
 <div class="field"><label>Evento / disparo</label><input id="searchEvento" placeholder="Escribe para buscar opciones"><div id="resultsEvento" class="results"></div><div id="tagsEvento" class="taglist"></div><small class="preset-hint">Valor predeterminado: Disparo</small></div>
 <div class="field"><label>Equipo(s)</label><input id="searchEquipo" placeholder="Escribe para buscar opciones"><div id="resultsEquipo" class="results"></div><div id="tagsEquipo" class="taglist"></div><div class="btnrow"><button class="small outline" id="clearEquipos">Limpiar todos</button></div></div>
 <div class="field"><label>Protecciones operadas</label><input id="searchProteccion" placeholder="Escribe para buscar opciones"><div id="resultsProteccion" class="results"></div><div id="tagsProteccion" class="taglist"></div></div>
-<div class="field"><label>Afectación de carga</label><select id="afectacion"><option>Sin afectación</option><option>Con afectación</option></select></div>
+<div class="field"><label>Afectación de carga</label><input id="searchAfectacion" placeholder="Escribe para buscar opciones"><div id="resultsAfectacion" class="results"></div><div id="tagsAfectacion" class="taglist"></div><input id="afectacion" type="hidden" value="Sin afectación"></div>
 <div class="field"><label>Carga afectada (MW)</label><input id="mw" type="number" min="0" step="0.1" placeholder="MW" disabled></div>
 <div class="field"><label>Causa del evento</label><input id="searchCausa" placeholder="Escribe para buscar opciones"><div id="resultsCausa" class="results"></div><div id="tagsCausa" class="taglist"></div><small class="preset-hint">Valor predeterminado: Se investiga</small></div>
-<div class="field"><label>Condición operativa</label><select id="condicion"></select></div>
+<div class="field"><label>Condición operativa</label><input id="searchCondicion" placeholder="Escribe para buscar opciones"><div id="resultsCondicion" class="results"></div><div id="tagsCondicion" class="taglist"></div><input id="condicion" type="hidden" value="normales de operación"></div>
 
 </div>
 <div class="btnrow"><button type="button" class="primary" id="generate">Generar mensajes</button><button type="button" class="outline" id="newEvent">Nuevo evento / limpiar</button><button type="button" class="primary" id="registerEvent">Registrar evento</button></div>
