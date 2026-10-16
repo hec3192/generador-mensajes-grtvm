@@ -186,6 +186,8 @@ footer{padding:18px;color:#78869a}
 #mw:disabled{background:#f3c2c8;border-color:#e8aeb7;color:#7c1d2a;opacity:1}
 
 </style>
+
+<style>.field-number{display:inline-flex;align-items:center;justify-content:center;min-width:23px;height:23px;margin-right:5px;padding:0 5px;border-radius:7px;background:#e4edff;color:#234b80;font-weight:800;border:1px solid #bfd1f5;font-size:12px;vertical-align:middle}</style>
 </head>
 <body>
 <header><h1>Generador de Mensajes Operativos</h1><p>GRTVM · ZOTP · Aplicación web para móvil</p>
@@ -234,13 +236,13 @@ footer{padding:18px;color:#78869a}
 <section class="card">
 <h2>Detalles operativos</h2>
 <div class="grid cols3">
-<div class="field"><label>Evento / disparo</label><input id="searchEvento" placeholder="Escribe para buscar opciones"><div id="resultsEvento" class="results"></div><div id="tagsEvento" class="taglist"></div><small class="preset-hint">Valor predeterminado: Disparo</small></div>
-<div class="field"><label>Equipo(s)</label><input id="searchEquipo" placeholder="Escribe para buscar opciones"><div id="resultsEquipo" class="results"></div><div id="tagsEquipo" class="taglist"></div><div class="btnrow"><button class="small outline" id="clearEquipos">Limpiar todos</button></div></div>
-<div class="field"><label>Protecciones operadas</label><input id="searchProteccion" placeholder="Escribe para buscar opciones"><div id="resultsProteccion" class="results"></div><div id="tagsProteccion" class="taglist"></div></div>
-<div class="field"><label>Afectación de carga</label><input id="searchAfectacion" placeholder="Escribe para buscar opciones"><div id="resultsAfectacion" class="results"></div><div id="tagsAfectacion" class="taglist"></div><small class="preset-hint">Valor predeterminado: Sin afectación</small><input id="afectacion" type="hidden" value="Sin afectación"></div>
-<div class="field"><label>Carga afectada (MW)</label><input id="mw" type="number" min="0" step="0.1" placeholder="MW" disabled></div>
-<div class="field"><label>Causa del evento</label><input id="searchCausa" placeholder="Escribe para buscar opciones"><div id="resultsCausa" class="results"></div><div id="tagsCausa" class="taglist"></div><small class="preset-hint">Valor predeterminado: Se investiga</small></div>
-<div class="field"><label>Condición operativa</label><input id="searchCondicion" placeholder="Escribe para buscar opciones"><div id="resultsCondicion" class="results"></div><div id="tagsCondicion" class="taglist"></div><small class="preset-hint">Valor predeterminado: normales de operación</small><input id="condicion" type="hidden" value="normales de operación"></div>
+<div class="field"><label><span class="field-number">1.</span> Evento / disparo</label><input id="searchEvento" placeholder="Valor precargado: Disparo"><div id="resultsEvento" class="results"></div><div id="tagsEvento" class="taglist"></div><small class="preset-hint">Valor predeterminado: Disparo</small></div>
+<div class="field"><label><span class="field-number">2.</span> Equipo(s)</label><input id="searchEquipo" placeholder="Valor precargado: Selecciona equipo(s)"><div id="resultsEquipo" class="results"></div><div id="tagsEquipo" class="taglist"></div><div class="btnrow"><button class="small outline" id="clearEquipos">Limpiar todos</button></div></div>
+<div class="field"><label><span class="field-number">3.</span> Protecciones operadas</label><input id="searchProteccion" placeholder="Valor precargado: Selecciona protección(es)"><div id="resultsProteccion" class="results"></div><div id="tagsProteccion" class="taglist"></div></div>
+<div class="field"><label><span class="field-number">4.</span> Afectación de carga</label><input id="searchAfectacion" placeholder="Valor precargado: Sin afectación"><div id="resultsAfectacion" class="results"></div><div id="tagsAfectacion" class="taglist"></div><small class="preset-hint">Valor predeterminado: Sin afectación</small><input id="afectacion" type="hidden" value="Sin afectación"></div>
+<div class="field"><label><span class="field-number">5.</span> Carga afectada (MW)</label><input id="mw" type="number" min="0" step="0.1" placeholder="MW" disabled></div>
+<div class="field"><label><span class="field-number">6.</span> Causa del evento</label><input id="searchCausa" placeholder="Valor precargado: Se investiga"><div id="resultsCausa" class="results"></div><div id="tagsCausa" class="taglist"></div><small class="preset-hint">Valor predeterminado: Se investiga</small></div>
+<div class="field"><label><span class="field-number">7.</span> Condición operativa</label><input id="searchCondicion" placeholder="Valor precargado: normales de operación"><div id="resultsCondicion" class="results"></div><div id="tagsCondicion" class="taglist"></div><small class="preset-hint">Valor predeterminado: normales de operación</small><input id="condicion" type="hidden" value="normales de operación"></div>
 
 </div>
 <div class="btnrow"><button type="button" class="primary" id="generate">Generar mensajes</button><button type="button" class="outline" id="newEvent">Nuevo evento / limpiar</button><button type="button" class="primary" id="registerEvent">Registrar evento</button></div>
