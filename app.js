@@ -278,7 +278,32 @@ $("excelFile").onchange=async e=>{
  try{
    let sheets;
    if(file.name.toLowerCase().endsWith(".csv")){const txt=await file.text();sheets={"Equipos":txt.split(/\r?\n/).map(x=>x.split(",")[0]).filter(Boolean)}}
-   else {if(!window.XLSX)throw new Error("No se pudo cargar el lector Excel. Conéctate a internet y vuelve a intentarlo.");const data=await file.arrayBuffer();const wb=XLSX.read(data,{type:"array"});sheets={};wb.SheetNames.forEach(n=>{const rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:""});const vals=rows.slice(1).map(r=>r.filter(v=>v!=="").map(String));const arr=vals.map(r=>r.length>1?`${r[0]} | ${r[1]}`:r[0]).filter(Boolean);sheets[n]=arr})}
+   else {
+     if(!window.XLSX)throw new Error("No se pudo cargar el lector Excel. Conéctate a internet y vuelve a intentarlo.");
+     const data=await file.arrayBuffer();const wb=XLSX.read(data,{type:"array"});sheets={};
+     const headerNames=["equipo","proteccion","protección","evento / disparo","evento","causa","acronimo","acrónimo","descripcion","descripción","condicion operativa","condición operativa"];
+     wb.SheetNames.forEach(n=>{
+       const rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:""});
+       // La plantilla tiene título y una instrucción antes de los encabezados.
+       // Busca la fila de encabezados y toma únicamente las filas posteriores.
+       const headerIndex=rows.findIndex(r=>r.some(v=>headerNames.includes(norm(v))));
+       if(headerIndex<0){sheets[n]=[];return;}
+       const headers=rows[headerIndex].map(v=>String(v??"").trim());
+       const dataRows=rows.slice(headerIndex+1);
+       const arr=dataRows.map(r=>{
+         const cells=r.map(v=>String(v??"").trim());
+         while(cells.length&&cells[cells.length-1]==="")cells.pop();
+         if(!cells.some(v=>v!==""))return "";
+         // Subestaciones conserva acrónimo y descripción en una sola opción.
+         if(norm(n)==="subestaciones"){
+           const code=cells[0]||"", desc=cells[1]||"";
+           return code&&desc?`${code} | ${desc}`:(code||desc);
+         }
+         return cells[0]||"";
+       }).filter(Boolean);
+       sheets[n]=arr;
+     });
+   }
    const aliases={"Equipos":["Equipos","Equipo","Equipment"],"Protecciones":["Protecciones","Protecciones operadas"],"Eventos / disparos":["Eventos / disparos","Evento / disparo","Eventos","Eventos y disparos"],"Causas":["Causas","Causa del evento","Causa"],"Subestaciones":["Subestaciones","Subestación","Subestacion"],"Condición operativa":["Condición operativa","Condicion operativa","Condiciones operativas","Condición de operación","Condiciones de operación"]};
    let imported=0, duplicates=0, recognized=0;
    const details=[];

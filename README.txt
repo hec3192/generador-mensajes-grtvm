@@ -30,3 +30,6 @@ Corrección v34: se fuerza display:none cuando la sección de catálogos está o
 
 
 Versión v35: los elementos seleccionados se distinguen por color: Equipos azul, Evento/disparo amarillo, Protecciones operadas verde y Causa del evento morado. Se conserva la funcionalidad de la versión 34.
+
+
+Versión v36: se corrigió la importación de la plantilla Excel. El importador ahora busca la fila real de encabezados y omite las filas de título e instrucciones como “Capture un registro por fila. No modifique los encabezados.”
